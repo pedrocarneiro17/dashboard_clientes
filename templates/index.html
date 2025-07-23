@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block title %}Painel Principal{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-building"></i> Empresas</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group mb-3">
+                    {% for empresa in empresas %}
+                        <li class="list-group-item">{{ empresa }}</li>
+                    {% else %}
+                        <li class="list-group-item">Nenhuma empresa cadastrada.</li>
+                    {% endfor %}
+                </ul>
+
+                <h6 class="mt-4">Adicionar Nova Empresa</h6>
+                <form action="{{ url_for('add_company') }}" method="post">
+                    <div class="input-group">
+                        <input type="text" name="nome_empresa" class="form-control" placeholder="Nome da Empresa" required>
+                        <button class="btn btn-success" type="submit">Adicionar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-pencil-square"></i> Gerenciar Dados Mensais</h5>
+                <a href="{{ url_for('export_csv') }}" class="btn btn-info btn-sm">
+                    <i class="bi bi-download"></i> Exportar Tudo (CSV)
+                </a>
+            </div>
+            <div class="card-body">
+                <p>Selecione a empresa e o período para editar os dados.</p>
+                <form id="form-gerenciar">
+                    <div class="mb-3">
+                        <label for="empresa_select" class="form-label">Empresa</label>
+                        <select id="empresa_select" class="form-select" required>
+                            <option value="" disabled selected>-- Selecione uma empresa --</option>
+                            {% for empresa in empresas %}
+                                <option value="{{ empresa }}">{{ empresa }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <label for="mes_select" class="form-label">Mês</label>
+                            <select id="mes_select" class="form-select" required>
+                                {% for mes in meses %}
+                                <option value="{{ mes }}" {% if mes == mes_atual %}selected{% endif %}>{{ mes }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="ano_select" class="form-label">Ano</label>
+                            <select id="ano_select" class="form-select" required>
+                                {% for ano in anos %}
+                                <option value="{{ ano }}" {% if ano == ano_atual %}selected{% endif %}>{{ ano }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-4 w-100">Abrir/Editar Dados</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('form-gerenciar').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const empresa = document.getElementById('empresa_select').value;
+    const mes = document.getElementById('mes_select').value;
+    const ano = document.getElementById('ano_select').value;
+
+    if (!empresa) {
+        alert('Por favor, selecione uma empresa.');
+        return;
+    }
+
+    const periodo = `${ano}-${mes}`;
+    // O encodeURIComponent é importante para nomes de empresa com espaços ou caracteres especiais
+    window.location.href = `/dados/${encodeURIComponent(empresa)}/${periodo}`;
+});
+</script>
+{% endblock %}

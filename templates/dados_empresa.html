@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+
+{% block title %}Dados de {{ nome_empresa }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>
+        <i class="bi bi-file-earmark-text"></i> Dados para <strong>{{ nome_empresa }}</strong>
+    </h3>
+    <span class="badge bg-secondary fs-6">Período: {{ periodo.split('-')[1] }}/{{ periodo.split('-')[0] }}</span>
+</div>
+
+
+<form method="post">
+    <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+            <button class="nav-link active" id="nav-faturamento-tab" data-bs-toggle="tab" data-bs-target="#nav-faturamento" type="button" role="tab">Faturamento</button>
+            <button class="nav-link" id="nav-impostos-tab" data-bs-toggle="tab" data-bs-target="#nav-impostos" type="button" role="tab">Impostos</button>
+            <button class="nav-link" id="nav-despesas-tab" data-bs-toggle="tab" data-bs-target="#nav-despesas" type="button" role="tab">Despesas/Serviços</button>
+        </div>
+    </nav>
+
+    <div class="tab-content card" id="nav-tabContent">
+        <div class="tab-pane fade show active p-4" id="nav-faturamento" role="tabpanel">
+            {% for campo in campos_faturamento %}
+            <div class="row mb-2">
+                <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
+                           value="{{ dados.get('faturamento', {}).get(campo, '')|string|replace('.', ',') }}"
+                           placeholder="0,00"
+                           oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="tab-pane fade p-4" id="nav-impostos" role="tabpanel">
+            {% for campo in campos_impostos %}
+            <div class="row mb-2">
+                <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
+                           value="{{ dados.get('impostos', {}).get(campo, '')|string|replace('.', ',') }}"
+                           placeholder="0,00"
+                           oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="tab-pane fade p-4" id="nav-despesas" role="tabpanel">
+             {% for campo in campos_despesas %}
+            <div class="row mb-2">
+                <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
+                           value="{{ dados.get('despesas', {}).get(campo, '')|string|replace('.', ',') }}"
+                           placeholder="0,00"
+                           oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+        <div>
+            <a href="{{ url_for('delete_company', nome_empresa=nome_empresa) }}"
+               class="btn btn-link text-danger"
+               onclick="return confirm('Você tem CERTEZA que deseja excluir a empresa \'{{ nome_empresa }}\' e todos os seus dados? Esta ação é permanente.');">
+                <i class="bi bi-trash"></i> Excluir Empresa
+            </a>
+        </div>
+    
+        <div>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Salvar Dados</button>
+        </div>
+    </div>
+</form>
+{% endblock %}
