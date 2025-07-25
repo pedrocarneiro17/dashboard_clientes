@@ -4,7 +4,9 @@ from datetime import datetime
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, Response
 import io
-import csv
+# NOVAS IMPORTAÇÕES PARA XLSX
+from openpyxl import Workbook
+from io import BytesIO
 
 # --- Configuração da Aplicação Flask ---
 app = Flask(__name__)
@@ -79,21 +81,27 @@ def logout():
 @login_required
 def index():
     dados = carregar_dados()
-    empresas_com_status = {}
-    for nome, detalhes in dados.items():
-        status_recente = "Nenhum Período"
-        periodos = detalhes.get('periodos', {})
-        if periodos:
-            periodo_recente = sorted(periodos.keys(), reverse=True)[0]
-            status_recente = periodos[periodo_recente].get('status', 'Em Aberto')
-        
-        empresas_com_status[nome] = {
-            'cnpj': detalhes.get('cnpj', ''),
-            'envio_imposto': detalhes.get('envio_imposto', ''),
-            'status_recente': status_recente
-        }
+    empresas_ordenadas = dict(sorted(dados.items()))
     
-    empresas_ordenadas = dict(sorted(empresas_com_status.items()))
+    search_ano = request.args.get('search_ano')
+    search_mes = request.args.get('search_mes')
+    empresas_em_aberto = None
+    empresas_finalizadas = None
+    periodo_pesquisado = None
+
+    if search_ano and search_mes:
+        periodo_pesquisado = f"{search_ano}-{search_mes}"
+        empresas_em_aberto = []
+        empresas_finalizadas = []
+        for nome, detalhes in empresas_ordenadas.items():
+            periodos = detalhes.get('periodos', {})
+            status_do_periodo = periodos.get(periodo_pesquisado, {}).get('status', 'Em Aberto')
+            
+            if status_do_periodo == 'Finalizado':
+                empresas_finalizadas.append(nome)
+            else:
+                empresas_em_aberto.append(nome)
+
     now = datetime.now()
     meses = [f"{i:02d}" for i in range(1, 13)]
     anos = [str(i) for i in range(now.year - 5, now.year + 2)]
@@ -103,7 +111,12 @@ def index():
                            meses=meses, 
                            anos=anos, 
                            ano_atual=str(now.year), 
-                           mes_atual=f"{now.month:02d}")
+                           mes_atual=f"{now.month:02d}",
+                           empresas_em_aberto=empresas_em_aberto,
+                           empresas_finalizadas=empresas_finalizadas,
+                           periodo_pesquisado=periodo_pesquisado,
+                           search_ano=search_ano,
+                           search_mes=search_mes)
 
 @app.route('/add_company', methods=['POST'])
 @login_required
@@ -162,19 +175,15 @@ def dados_empresa(nome_empresa, periodo):
 def finalize_month(nome_empresa, periodo):
     dados_gerais = carregar_dados()
     if nome_empresa in dados_gerais:
-        # Garante que a estrutura de dicionários exista antes de modificar
         if 'periodos' not in dados_gerais[nome_empresa]:
             dados_gerais[nome_empresa]['periodos'] = {}
         if periodo not in dados_gerais[nome_empresa]['periodos']:
             dados_gerais[nome_empresa]['periodos'][periodo] = {}
-        
-        # Define o status como Finalizado
         dados_gerais[nome_empresa]['periodos'][periodo]['status'] = 'Finalizado'
         salvar_dados(dados_gerais)
         flash('Mês finalizado com sucesso!', 'success')
     else:
         flash('Erro ao finalizar o mês. Empresa não encontrada.', 'danger')
-    
     return redirect(url_for('dados_empresa', nome_empresa=nome_empresa, periodo=periodo))
 
 @app.route('/delete/<path:nome_empresa>')
@@ -189,42 +198,61 @@ def delete_company(nome_empresa):
         flash(f'Erro: Empresa "{nome_empresa}" não encontrada.', 'danger')
     return redirect(url_for('index'))
 
-@app.route('/export_csv')
+# ROTA ATUALIZADA PARA EXPORTAR XLSX
+@app.route('/export_xlsx')
 @login_required
-def export_csv():
+def export_xlsx():
+    ano = request.args.get('ano')
+    mes = request.args.get('mes')
+
+    if not ano or not mes:
+        flash('Por favor, selecione um mês e ano no painel "Gerenciar Dados Mensais" antes de exportar.', 'warning')
+        return redirect(url_for('index'))
+
+    periodo_alvo = f"{ano}-{mes}"
     dados = carregar_dados()
-    timestamp = datetime.now().strftime("%Y-%m-%d")
-    filename = f"export_contajur_{timestamp}.csv"
-    linhas_para_csv = []
+    filename = f"export_contajur_{periodo_alvo}.xlsx"
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = f"Dados {mes}-{ano}"
+
+    headers = ['Empresa', 'CNPJ', 'Envio de Imposto', 'Ano', 'Mes', 'Status'] + CAMPOS_FATURAMENTO + CAMPOS_DESPESAS + CAMPOS_IMPOSTOS_FEDERAL + CAMPOS_IMPOSTOS_ESTADUAL + CAMPOS_IMPOSTOS_MUNICIPAL + CAMPOS_RETENCOES_FEDERAL
+    ws.append(headers)
+
     for nome_empresa, detalhes_empresa in dados.items():
         periodos = detalhes_empresa.get('periodos', {})
-        for periodo, categorias in periodos.items():
-            if not isinstance(categorias, dict): continue
-            ano, mes = periodo.split('-')
-            linha = {
-                'Empresa': nome_empresa, 
-                'CNPJ': detalhes_empresa.get('cnpj', ''), 
-                'Envio de Imposto': detalhes_empresa.get('envio_imposto', ''), 
-                'Ano': ano, 
-                'Mes': mes,
-                'Status': categorias.get('status', 'Em Aberto')
-            }
-            linha.update(categorias.get('faturamento', {}))
-            linha.update(categorias.get('despesas', {}))
-            linha.update(categorias.get('impostos_federal', {}))
-            linha.update(categorias.get('impostos_estadual', {}))
-            linha.update(categorias.get('impostos_municipal', {}))
-            linha.update(categorias.get('retencoes_federal', {}))
-            linhas_para_csv.append(linha)
-    if not linhas_para_csv:
-        flash('Não há dados para exportar.', 'warning')
+        if periodo_alvo in periodos:
+            categorias = periodos[periodo_alvo]
+            row_data = [
+                nome_empresa,
+                detalhes_empresa.get('cnpj', ''),
+                detalhes_empresa.get('envio_imposto', ''),
+                ano,
+                mes,
+                categorias.get('status', 'Em Aberto')
+            ]
+            for campo in CAMPOS_FATURAMENTO: row_data.append(categorias.get('faturamento', {}).get(campo, 0.0))
+            for campo in CAMPOS_DESPESAS: row_data.append(categorias.get('despesas', {}).get(campo, 0.0))
+            for campo in CAMPOS_IMPOSTOS_FEDERAL: row_data.append(categorias.get('impostos_federal', {}).get(campo, 0.0))
+            for campo in CAMPOS_IMPOSTOS_ESTADUAL: row_data.append(categorias.get('impostos_estadual', {}).get(campo, 0.0))
+            for campo in CAMPOS_IMPOSTOS_MUNICIPAL: row_data.append(categorias.get('impostos_municipal', {}).get(campo, 0.0))
+            for campo in CAMPOS_RETENCOES_FEDERAL: row_data.append(categorias.get('retencoes_federal', {}).get(campo, 0.0))
+            ws.append(row_data)
+            
+    if ws.max_row <= 1:
+        flash(f'Nenhum dado encontrado para o período {mes}/{ano} para ser exportado.', 'info')
         return redirect(url_for('index'))
-    output = io.StringIO()
-    todos_os_campos = ['Empresa', 'CNPJ', 'Envio de Imposto', 'Ano', 'Mes', 'Status'] + CAMPOS_FATURAMENTO + CAMPOS_DESPESAS + CAMPOS_IMPOSTOS_FEDERAL + CAMPOS_IMPOSTOS_ESTADUAL + CAMPOS_IMPOSTOS_MUNICIPAL + CAMPOS_RETENCOES_FEDERAL
-    writer = csv.DictWriter(output, fieldnames=todos_os_campos, extrasaction='ignore')
-    writer.writeheader()
-    writer.writerows(linhas_para_csv)
-    return Response(output.getvalue(), mimetype="text/csv", headers={"Content-Disposition": f"attachment;filename={filename}"})
+
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    return Response(
+        buffer,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={"Content-Disposition": f"attachment;filename={filename}"}
+    )
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))

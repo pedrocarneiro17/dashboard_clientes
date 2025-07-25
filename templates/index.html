@@ -32,10 +32,7 @@
                     </div>
                     <button class="btn btn-success w-100" type="submit">Adicionar Empresa</button>
                 </form>
-
                 <hr>
-
-                <!-- Lista de Empresas Simplificada -->
                 <ul class="list-group list-group-flush">
                     {% for nome, detalhes in empresas.items() %}
                         <li class="list-group-item">
@@ -55,14 +52,15 @@
         </div>
     </div>
 
-    <!-- Coluna da Direita: Ações -->
+    <!-- Coluna da Direita: Ações e Pesquisa -->
     <div class="col-md-7">
-        <div class="card">
+        <!-- Card de Gerenciamento -->
+        <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5><i class="bi bi-pencil-square"></i> Gerenciar Dados Mensais</h5>
-                <a href="{{ url_for('export_csv') }}" class="btn btn-info btn-sm">
-                    <i class="bi bi-download"></i> Exportar Tudo (CSV)
-                </a>
+                <button type="button" id="export-btn" class="btn btn-info btn-sm">
+                    <i class="bi bi-download"></i> Exportar Mês (XLSX)
+                </button>
             </div>
             <div class="card-body">
                 <p>Selecione a empresa e o período para editar os dados.</p>
@@ -98,10 +96,68 @@
                 </form>
             </div>
         </div>
+
+        <!-- Card de Consulta de Status -->
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-search"></i> Consultar Status do Mês</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('index') }}">
+                    <div class="row">
+                        <div class="col">
+                            <label for="search_mes" class="form-label">Mês</label>
+                            <select id="search_mes" name="search_mes" class="form-select" required>
+                                {% for mes in meses %}
+                                <option value="{{ mes }}" {% if mes == (search_mes or mes_atual) %}selected{% endif %}>{{ mes }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="search_ano" class="form-label">Ano</label>
+                            <select id="search_ano" name="search_ano" class="form-select" required>
+                                {% for ano in anos %}
+                                <option value="{{ ano }}" {% if ano == (search_ano or ano_atual) %}selected{% endif %}>{{ ano }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-secondary mt-3 w-100">Pesquisar</button>
+                </form>
+
+                {% if periodo_pesquisado %}
+                <hr class="my-4">
+                <h5 class="mb-3">Resultados para {{ periodo_pesquisado.split('-')[1] }}/{{ periodo_pesquisado.split('-')[0] }}</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><span class="badge bg-warning text-dark me-2">{{ empresas_em_aberto|length }}</span>Em Aberto</h6>
+                        <ul class="list-group list-group-flush">
+                            {% for empresa in empresas_em_aberto %}
+                                <li class="list-group-item">{{ empresa }}</li>
+                            {% else %}
+                                <li class="list-group-item text-body-secondary">Nenhuma empresa pendente.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><span class="badge bg-success me-2">{{ empresas_finalizadas|length }}</span>Finalizadas</h6>
+                        <ul class="list-group list-group-flush">
+                            {% for empresa in empresas_finalizadas %}
+                                <li class="list-group-item">{{ empresa }}</li>
+                            {% else %}
+                                <li class="list-group-item text-body-secondary">Nenhuma empresa finalizada.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
+// Script para abrir/editar dados
 document.getElementById('form-gerenciar').addEventListener('submit', function(event) {
     event.preventDefault();
     const empresa = document.getElementById('empresa_select').value;
@@ -115,6 +171,17 @@ document.getElementById('form-gerenciar').addEventListener('submit', function(ev
     window.location.href = `/dados/${encodeURIComponent(empresa)}/${periodo}`;
 });
 
+// Script para o botão de exportar
+document.getElementById('export-btn').addEventListener('click', function() {
+    const mes = document.getElementById('mes_select').value;
+    const ano = document.getElementById('ano_select').value;
+    
+    // Constrói a URL para a nova rota de exportação XLSX
+    const exportUrl = `{{ url_for('export_xlsx') }}?ano=${ano}&mes=${mes}`;
+    window.location.href = exportUrl;
+});
+
+// Script para máscara de CNPJ
 function mascaraCnpj(input) {
     let value = input.value.replace(/\D/g, '');
     value = value.replace(/^(\d{2})(\d)/, '$1.$2');
