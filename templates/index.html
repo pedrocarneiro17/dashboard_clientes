@@ -4,32 +4,59 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-4">
+    <!-- Coluna da Esquerda: Empresas -->
+    <div class="col-md-5">
         <div class="card">
             <div class="card-header">
                 <h5><i class="bi bi-building"></i> Empresas</h5>
             </div>
             <div class="card-body">
-                <ul class="list-group mb-3">
-                    {% for empresa in empresas %}
-                        <li class="list-group-item">{{ empresa }}</li>
+                <h6 class="mb-3">Adicionar Nova Empresa</h6>
+                <form action="{{ url_for('add_company') }}" method="post" class="mb-4">
+                    <div class="mb-2">
+                        <label for="nome_empresa" class="form-label">Nome da Empresa</label>
+                        <input type="text" id="nome_empresa" name="nome_empresa" class="form-control" required>
+                    </div>
+                    <div class="mb-2">
+                        <label for="cnpj" class="form-label">CNPJ</label>
+                        <input type="text" id="cnpj" name="cnpj" class="form-control" placeholder="00.000.000/0000-00" oninput="mascaraCnpj(this)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="envio_imposto" class="form-label">Envio de Imposto</label>
+                        <select id="envio_imposto" name="envio_imposto" class="form-select" required>
+                            <option value="Gclick" selected>Gclick</option>
+                            <option value="Contajur paga">Contajur paga</option>
+                            <option value="Cliente impresso">Cliente impresso</option>
+                            <option value="Simples conferência">Simples conferência</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-success w-100" type="submit">Adicionar Empresa</button>
+                </form>
+
+                <hr>
+
+                <!-- Lista de Empresas Simplificada -->
+                <ul class="list-group list-group-flush">
+                    {% for nome, detalhes in empresas.items() %}
+                        <li class="list-group-item">
+                            <div class="fw-bold">{{ nome }}</div>
+                            <div class="small text-body-secondary mt-1">
+                                {% if detalhes.cnpj %}
+                                    CNPJ: {{ detalhes.cnpj }} <br>
+                                {% endif %}
+                                Envio: {{ detalhes.envio_imposto }}
+                            </div>
+                        </li>
                     {% else %}
                         <li class="list-group-item">Nenhuma empresa cadastrada.</li>
                     {% endfor %}
                 </ul>
-
-                <h6 class="mt-4">Adicionar Nova Empresa</h6>
-                <form action="{{ url_for('add_company') }}" method="post">
-                    <div class="input-group">
-                        <input type="text" name="nome_empresa" class="form-control" placeholder="Nome da Empresa" required>
-                        <button class="btn btn-success" type="submit">Adicionar</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
 
-    <div class="col-md-8">
+    <!-- Coluna da Direita: Ações -->
+    <div class="col-md-7">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5><i class="bi bi-pencil-square"></i> Gerenciar Dados Mensais</h5>
@@ -44,8 +71,8 @@
                         <label for="empresa_select" class="form-label">Empresa</label>
                         <select id="empresa_select" class="form-select" required>
                             <option value="" disabled selected>-- Selecione uma empresa --</option>
-                            {% for empresa in empresas %}
-                                <option value="{{ empresa }}">{{ empresa }}</option>
+                            {% for nome in empresas.keys() %}
+                                <option value="{{ nome }}">{{ nome }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -80,15 +107,21 @@ document.getElementById('form-gerenciar').addEventListener('submit', function(ev
     const empresa = document.getElementById('empresa_select').value;
     const mes = document.getElementById('mes_select').value;
     const ano = document.getElementById('ano_select').value;
-
     if (!empresa) {
         alert('Por favor, selecione uma empresa.');
         return;
     }
-
     const periodo = `${ano}-${mes}`;
-    // O encodeURIComponent é importante para nomes de empresa com espaços ou caracteres especiais
     window.location.href = `/dados/${encodeURIComponent(empresa)}/${periodo}`;
 });
+
+function mascaraCnpj(input) {
+    let value = input.value.replace(/\D/g, '');
+    value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+    value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+    value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+    value = value.replace(/(\d{4})(\d)/, '$1-$2');
+    input.value = value.slice(0, 18);
+}
 </script>
 {% endblock %}

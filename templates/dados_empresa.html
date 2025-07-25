@@ -3,24 +3,44 @@
 {% block title %}Dados de {{ nome_empresa }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="mb-3">
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Voltar ao Painel Principal
+    </a>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
     <h3>
         <i class="bi bi-file-earmark-text"></i> Dados para <strong>{{ nome_empresa }}</strong>
     </h3>
-    <span class="badge bg-secondary fs-6">Período: {{ periodo.split('-')[1] }}/{{ periodo.split('-')[0] }}</span>
+    <div>
+        <span class="badge bg-secondary fs-6 me-2">Período: {{ periodo.split('-')[1] }}/{{ periodo.split('-')[0] }}</span>
+        <!-- Indicador de Status do Período -->
+        <span class="badge fs-6 {% if status == 'Finalizado' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+            Status: {{ status }}
+        </span>
+    </div>
 </div>
 
+<div class="mb-4 text-body-secondary">
+    {% if dados_empresa.cnpj %}
+        <strong>CNPJ:</strong> {{ dados_empresa.cnpj }}
+    {% endif %}
+    <br>
+    <strong>Envio de Imposto:</strong> {{ dados_empresa.envio_imposto }}
+</div>
 
 <form method="post">
     <nav>
         <div class="nav nav-tabs" id="nav-tab" role="tablist">
             <button class="nav-link active" id="nav-faturamento-tab" data-bs-toggle="tab" data-bs-target="#nav-faturamento" type="button" role="tab">Faturamento</button>
-            <button class="nav-link" id="nav-impostos-tab" data-bs-toggle="tab" data-bs-target="#nav-impostos" type="button" role="tab">Impostos</button>
-            <button class="nav-link" id="nav-despesas-tab" data-bs-toggle="tab" data-bs-target="#nav-despesas" type="button" role="tab">Despesas/Serviços</button>
+            <button class="nav-link" id="nav-impostos-tab" data-bs-toggle="tab" data-bs-target="#nav-impostos" type="button" role="tab">Impostos e Retenções</button>
+            <button class="nav-link" id="nav-despesas-tab" data-bs-toggle="tab" data-bs-target="#nav-despesas" type="button" role="tab">Despesas</button>
         </div>
     </nav>
 
     <div class="tab-content card" id="nav-tabContent">
+        <!-- Aba Faturamento -->
         <div class="tab-pane fade show active p-4" id="nav-faturamento" role="tabpanel">
             {% for campo in campos_faturamento %}
             <div class="row mb-2">
@@ -35,13 +55,54 @@
             {% endfor %}
         </div>
         
+        <!-- Aba Impostos e Retenções -->
         <div class="tab-pane fade p-4" id="nav-impostos" role="tabpanel">
-            {% for campo in campos_impostos %}
+            <h6 class="text-primary border-bottom pb-2 mb-3">Impostos Federais</h6>
+            {% for campo in campos_impostos_federal %}
             <div class="row mb-2">
                 <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
                 <div class="col-sm-8">
                     <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
-                           value="{{ dados.get('impostos', {}).get(campo, '')|string|replace('.', ',') }}"
+                           value="{{ dados.get('impostos_federal', {}).get(campo, '')|string|replace('.', ',') }}"
+                           placeholder="0,00"
+                           oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');">
+                </div>
+            </div>
+            {% endfor %}
+
+            <h6 class="text-primary border-bottom pb-2 mt-4 mb-3">Impostos Estaduais</h6>
+            {% for campo in campos_impostos_estadual %}
+            <div class="row mb-2">
+                <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
+                           value="{{ dados.get('impostos_estadual', {}).get(campo, '')|string|replace('.', ',') }}"
+                           placeholder="0,00"
+                           oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');">
+                </div>
+            </div>
+            {% endfor %}
+
+            <h6 class="text-primary border-bottom pb-2 mt-4 mb-3">Impostos Municipais</h6>
+            {% for campo in campos_impostos_municipal %}
+            <div class="row mb-2">
+                <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
+                           value="{{ dados.get('impostos_municipal', {}).get(campo, '')|string|replace('.', ',') }}"
+                           placeholder="0,00"
+                           oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');">
+                </div>
+            </div>
+            {% endfor %}
+
+            <h6 class="text-primary border-bottom pb-2 mt-4 mb-3">Retenções Federais</h6>
+            {% for campo in campos_retencoes_federal %}
+            <div class="row mb-2">
+                <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
+                           value="{{ dados.get('retencoes_federal', {}).get(campo, '')|string|replace('.', ',') }}"
                            placeholder="0,00"
                            oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');">
                 </div>
@@ -49,6 +110,7 @@
             {% endfor %}
         </div>
         
+        <!-- Aba Despesas -->
         <div class="tab-pane fade p-4" id="nav-despesas" role="tabpanel">
              {% for campo in campos_despesas %}
             <div class="row mb-2">
@@ -64,6 +126,7 @@
         </div>
     </div>
 
+    <!-- ÁREA DE BOTÕES ATUALIZADA -->
     <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
         <div>
             <a href="{{ url_for('delete_company', nome_empresa=nome_empresa) }}"
@@ -72,10 +135,19 @@
                 <i class="bi bi-trash"></i> Excluir Empresa
             </a>
         </div>
-    
-        <div>
-            <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar</a>
-            <button type="submit" class="btn btn-primary">Salvar Dados</button>
+        
+        <div class="d-flex align-items-center">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary me-2">Cancelar</a>
+            <!-- Este botão usa a ação principal do formulário -->
+            <button type="submit" class="btn btn-primary me-2">Salvar Dados</button>
+            
+            <!-- CORREÇÃO: Botão Finalizar Mês com o atributo 'formaction' -->
+            {% if status != 'Finalizado' %}
+            <button type="submit" class="btn btn-success" 
+                    formaction="{{ url_for('finalize_month', nome_empresa=nome_empresa, periodo=periodo) }}">
+                <i class="bi bi-check-circle"></i> Finalizar Mês
+            </button>
+            {% endif %}
         </div>
     </div>
 </form>

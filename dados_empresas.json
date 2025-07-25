@@ -1,0 +1,99 @@
+{
+    "oi": {
+        "cnpj": "11.111.111/1111-11",
+        "envio_imposto": "Contajur paga",
+        "periodos": {
+            "2025-07": {
+                "faturamento": {
+                    "Serviços tributados": 0.0,
+                    "Serviços retidos": 0.0,
+                    "Venda (indústria)": 0.0,
+                    "Revenda mercadorias tributárias": 0.0,
+                    "Revenda mercadorias não tributárias": 0.0,
+                    "Revenda de mercadoria monofásica": 0.0,
+                    "Locação": 0.0
+                },
+                "despesas": {
+                    "Compras para revenda": 0.0,
+                    "Compras para uso/consumo": 0.0,
+                    "Compras para ativo imobilizado": 0.0,
+                    "Serviços tomados com nota fiscal": 0.0
+                },
+                "impostos_federal": {
+                    "Simples": 0.0,
+                    "PIS": 0.0,
+                    "COFINS": 0.0,
+                    "IRPJ": 0.0,
+                    "CSLL": 0.0
+                },
+                "impostos_estadual": {
+                    "ICMS próprio": 0.0,
+                    "ICMS ST próprio": 0.0,
+                    "DIFAL": 0.0,
+                    "Antecipação": 0.0,
+                    "ICMS ST Entradas": 0.0,
+                    "FEM": 0.0
+                },
+                "impostos_municipal": {
+                    "ISSQN a pagar": 0.0,
+                    "ISSQN Retido (NF própria)": 0.0
+                },
+                "retencoes_federal": {
+                    "CSRF (Retido)": 0.0,
+                    "IRRF (Retido)": 0.0,
+                    "INSS (Retido)": 0.0,
+                    "ISSQN (Retido)": 0.0
+                }
+            }
+        }
+    },
+    "pedro": {
+        "cnpj": "11.111.111/1111-11",
+        "envio_imposto": "Gclick",
+        "periodos": {
+            "2025-07": {
+                "faturamento": {
+                    "Serviços tributados": 1222.0,
+                    "Serviços retidos": 0.0,
+                    "Venda (indústria)": 0.0,
+                    "Revenda mercadorias tributárias": 0.0,
+                    "Revenda mercadorias não tributárias": 0.0,
+                    "Revenda de mercadoria monofásica": 0.0,
+                    "Locação": 0.0
+                },
+                "despesas": {
+                    "Compras para revenda": 0.0,
+                    "Compras para uso/consumo": 0.0,
+                    "Compras para ativo imobilizado": 0.0,
+                    "Serviços tomados com nota fiscal": 0.0
+                },
+                "impostos_federal": {
+                    "Simples": 0.0,
+                    "PIS": 0.0,
+                    "COFINS": 0.0,
+                    "IRPJ": 0.0,
+                    "CSLL": 0.0
+                },
+                "impostos_estadual": {
+                    "ICMS próprio": 0.0,
+                    "ICMS ST próprio": 0.0,
+                    "DIFAL": 0.0,
+                    "Antecipação": 0.0,
+                    "ICMS ST Entradas": 0.0,
+                    "FEM": 0.0
+                },
+                "impostos_municipal": {
+                    "ISSQN a pagar": 0.0,
+                    "ISSQN Retido (NF própria)": 0.0
+                },
+                "retencoes_federal": {
+                    "CSRF (Retido)": 0.0,
+                    "IRRF (Retido)": 0.0,
+                    "INSS (Retido)": 0.0,
+                    "ISSQN (Retido)": 0.0
+                },
+                "status": "Finalizado"
+            }
+        }
+    }
+}
