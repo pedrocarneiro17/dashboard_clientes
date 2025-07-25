@@ -4,7 +4,6 @@ from datetime import datetime
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, Response
 import io
-# NOVAS IMPORTAÇÕES PARA XLSX
 from openpyxl import Workbook
 from io import BytesIO
 
@@ -104,7 +103,8 @@ def index():
 
     now = datetime.now()
     meses = [f"{i:02d}" for i in range(1, 13)]
-    anos = [str(i) for i in range(now.year - 5, now.year + 2)]
+    # LÓGICA ATUALIZADA: Gera uma faixa de anos mais ampla
+    anos = [str(i) for i in range(2000, now.year + 100)]
     
     return render_template('index.html', 
                            empresas=empresas_ordenadas, 
@@ -198,7 +198,6 @@ def delete_company(nome_empresa):
         flash(f'Erro: Empresa "{nome_empresa}" não encontrada.', 'danger')
     return redirect(url_for('index'))
 
-# ROTA ATUALIZADA PARA EXPORTAR XLSX
 @app.route('/export_xlsx')
 @login_required
 def export_xlsx():
