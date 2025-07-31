@@ -84,39 +84,83 @@ def index():
     
     search_ano = request.args.get('search_ano')
     search_mes = request.args.get('search_mes')
-    empresas_em_aberto = None
-    empresas_finalizadas = None
+    search_status = request.args.get('search_status')
+    
+    empresas_resultado = None
     periodo_pesquisado = None
+    status_pesquisado_label = None
 
-    if search_ano and search_mes:
+    if search_ano and search_mes and search_status:
         periodo_pesquisado = f"{search_ano}-{search_mes}"
-        empresas_em_aberto = []
-        empresas_finalizadas = []
+        empresas_resultado = []
+        
+        status_labels = {
+            "em_aberto": "Em Aberto", "finalizado": "Finalizado",
+            "fat_lancado": "Faturamento Lançado", "fat_nao_lancado": "Faturamento Não Lançado",
+            "fat_concluido": "Faturamento Concluído", "fat_nao_concluido": "Faturamento Não Concluído",
+            "imp_fed_lancado": "Impostos Federais Lançado", "imp_fed_nao_lancado": "Impostos Federais Não Lançado",
+            "imp_fed_concluido": "Impostos Federais Concluído", "imp_fed_nao_concluido": "Impostos Federais Não Concluído",
+            "ret_fed_lancado": "Retenções Federais Lançado", "ret_fed_nao_lancado": "Retenções Federais Não Lançado",
+            "ret_fed_concluido": "Retenções Federais Concluído", "ret_fed_nao_concluido": "Retenções Federais Não Concluído"
+        }
+        status_pesquisado_label = status_labels.get(search_status, "")
+
         for nome, detalhes in empresas_ordenadas.items():
-            periodos = detalhes.get('periodos', {})
-            status_do_periodo = periodos.get(periodo_pesquisado, {}).get('status', 'Em Aberto')
+            dados_periodo = detalhes.get('periodos', {}).get(periodo_pesquisado, {})
+            match = False
             
-            if status_do_periodo == 'Finalizado':
-                empresas_finalizadas.append(nome)
-            else:
-                empresas_em_aberto.append(nome)
+            if search_status == 'finalizado':
+                if dados_periodo.get('status') == 'Finalizado': match = True
+            elif search_status == 'em_aberto':
+                if dados_periodo.get('status', 'Em Aberto') == 'Em Aberto': match = True
+            # Faturamento
+            elif search_status == 'fat_lancado':
+                if dados_periodo.get('faturamento', {}).get('lancado', False): match = True
+            elif search_status == 'fat_nao_lancado':
+                if not dados_periodo.get('faturamento', {}).get('lancado', False): match = True
+            elif search_status == 'fat_concluido':
+                if dados_periodo.get('faturamento', {}).get('concluido', False): match = True
+            elif search_status == 'fat_nao_concluido':
+                if not dados_periodo.get('faturamento', {}).get('concluido', False): match = True
+            # Impostos Federais
+            elif search_status == 'imp_fed_lancado':
+                if dados_periodo.get('impostos_federal', {}).get('lancado', False): match = True
+            elif search_status == 'imp_fed_nao_lancado':
+                if not dados_periodo.get('impostos_federal', {}).get('lancado', False): match = True
+            elif search_status == 'imp_fed_concluido':
+                if dados_periodo.get('impostos_federal', {}).get('concluido', False): match = True
+            elif search_status == 'imp_fed_nao_concluido':
+                if not dados_periodo.get('impostos_federal', {}).get('concluido', False): match = True
+            # Retenções Federais
+            elif search_status == 'ret_fed_lancado':
+                if dados_periodo.get('retencoes_federal', {}).get('lancado', False): match = True
+            elif search_status == 'ret_fed_nao_lancado':
+                if not dados_periodo.get('retencoes_federal', {}).get('lancado', False): match = True
+            elif search_status == 'ret_fed_concluido':
+                if dados_periodo.get('retencoes_federal', {}).get('concluido', False): match = True
+            elif search_status == 'ret_fed_nao_concluido':
+                if not dados_periodo.get('retencoes_federal', {}).get('concluido', False): match = True
+            
+            if match:
+                empresas_resultado.append(nome)
 
     now = datetime.now()
     meses = [f"{i:02d}" for i in range(1, 13)]
-    # LÓGICA ATUALIZADA: Gera uma faixa de anos mais ampla
-    anos = [str(i) for i in range(2000, now.year + 100)]
+    anos = [str(i) for i in range(2010, now.year + 6)]
     
     return render_template('index.html', 
-                           empresas=empresas_ordenadas, 
-                           meses=meses, 
-                           anos=anos, 
-                           ano_atual=str(now.year), 
-                           mes_atual=f"{now.month:02d}",
-                           empresas_em_aberto=empresas_em_aberto,
-                           empresas_finalizadas=empresas_finalizadas,
+                           empresas=empresas_ordenadas, meses=meses, anos=anos, 
+                           ano_atual=str(now.year), mes_atual=f"{now.month:02d}",
+                           empresas_resultado=empresas_resultado,
                            periodo_pesquisado=periodo_pesquisado,
-                           search_ano=search_ano,
-                           search_mes=search_mes)
+                           search_ano=search_ano, search_mes=search_mes,
+                           search_status=search_status,
+                           status_pesquisado_label=status_pesquisado_label)
+
+@app.route('/add_company_page')
+@login_required
+def add_company_page():
+    return render_template('add_company.html')
 
 @app.route('/add_company', methods=['POST'])
 @login_required
@@ -124,19 +168,25 @@ def add_company():
     nome_empresa = request.form.get('nome_empresa')
     if not nome_empresa:
         flash('O nome da empresa não pode ser vazio.', 'danger')
-        return redirect(url_for('index'))
+        return redirect(url_for('add_company_page'))
     dados = carregar_dados()
     if nome_empresa in dados:
         flash('Essa empresa já está cadastrada.', 'warning')
-    else:
-        dados[nome_empresa] = {
-            'cnpj': request.form.get('cnpj', ''),
-            'envio_imposto': request.form.get('envio_imposto', ''),
-            'periodos': {}
-        }
-        salvar_dados(dados)
-        flash(f'Empresa "{nome_empresa}" adicionada com sucesso!', 'success')
+        return redirect(url_for('add_company_page'))
+    
+    dados[nome_empresa] = {
+        'cnpj': request.form.get('cnpj', ''),
+        'envio_imposto': request.form.get('envio_imposto', ''),
+        'periodos': {}
+    }
+    salvar_dados(dados)
+    flash(f'Empresa "{nome_empresa}" adicionada com sucesso!', 'success')
     return redirect(url_for('index'))
+
+@app.route('/selecionar_departamento/<path:nome_empresa>/<periodo>')
+@login_required
+def selecionar_departamento(nome_empresa, periodo):
+    return render_template('selecionar_departamento.html', nome_empresa=nome_empresa, periodo=periodo)
 
 @app.route('/dados/<path:nome_empresa>/<periodo>', methods=['GET', 'POST'])
 @login_required
@@ -150,12 +200,21 @@ def dados_empresa(nome_empresa, periodo):
         periodos_empresa = dados_empresa_especifica.get('periodos', {})
         if periodo not in periodos_empresa: periodos_empresa[periodo] = {}
         dados_periodo = periodos_empresa[periodo]
+        
         dados_periodo['faturamento'] = {campo: para_float(request.form.get(campo)) for campo in CAMPOS_FATURAMENTO}
         dados_periodo['despesas'] = {campo: para_float(request.form.get(campo)) for campo in CAMPOS_DESPESAS}
         dados_periodo['impostos_federal'] = {campo: para_float(request.form.get(campo)) for campo in CAMPOS_IMPOSTOS_FEDERAL}
         dados_periodo['impostos_estadual'] = {campo: para_float(request.form.get(campo)) for campo in CAMPOS_IMPOSTOS_ESTADUAL}
         dados_periodo['impostos_municipal'] = {campo: para_float(request.form.get(campo)) for campo in CAMPOS_IMPOSTOS_MUNICIPAL}
         dados_periodo['retencoes_federal'] = {campo: para_float(request.form.get(campo)) for campo in CAMPOS_RETENCOES_FEDERAL}
+        
+        dados_periodo['faturamento']['lancado'] = 'fat_lancado' in request.form
+        dados_periodo['faturamento']['concluido'] = 'fat_concluido' in request.form
+        dados_periodo['impostos_federal']['lancado'] = 'imp_fed_lancado' in request.form
+        dados_periodo['impostos_federal']['concluido'] = 'imp_fed_concluido' in request.form
+        dados_periodo['retencoes_federal']['lancado'] = 'ret_fed_lancado' in request.form
+        dados_periodo['retencoes_federal']['concluido'] = 'ret_fed_concluido' in request.form
+
         dados_gerais[nome_empresa]['periodos'] = periodos_empresa
         salvar_dados(dados_gerais)
         flash(f'Dados para {nome_empresa} ({periodo}) salvos com sucesso!', 'success')
@@ -175,15 +234,25 @@ def dados_empresa(nome_empresa, periodo):
 def finalize_month(nome_empresa, periodo):
     dados_gerais = carregar_dados()
     if nome_empresa in dados_gerais:
-        if 'periodos' not in dados_gerais[nome_empresa]:
-            dados_gerais[nome_empresa]['periodos'] = {}
-        if periodo not in dados_gerais[nome_empresa]['periodos']:
-            dados_gerais[nome_empresa]['periodos'][periodo] = {}
+        if 'periodos' not in dados_gerais[nome_empresa]: dados_gerais[nome_empresa]['periodos'] = {}
+        if periodo not in dados_gerais[nome_empresa]['periodos']: dados_gerais[nome_empresa]['periodos'][periodo] = {}
         dados_gerais[nome_empresa]['periodos'][periodo]['status'] = 'Finalizado'
         salvar_dados(dados_gerais)
         flash('Mês finalizado com sucesso!', 'success')
     else:
         flash('Erro ao finalizar o mês. Empresa não encontrada.', 'danger')
+    return redirect(url_for('dados_empresa', nome_empresa=nome_empresa, periodo=periodo))
+
+@app.route('/reopen_month/<path:nome_empresa>/<periodo>', methods=['POST'])
+@login_required
+def reopen_month(nome_empresa, periodo):
+    dados_gerais = carregar_dados()
+    if nome_empresa in dados_gerais and periodo in dados_gerais[nome_empresa].get('periodos', {}):
+        dados_gerais[nome_empresa]['periodos'][periodo]['status'] = 'Em Aberto'
+        salvar_dados(dados_gerais)
+        flash('Mês reaberto para edição!', 'info')
+    else:
+        flash('Erro ao reabrir o mês.', 'danger')
     return redirect(url_for('dados_empresa', nome_empresa=nome_empresa, periodo=periodo))
 
 @app.route('/delete/<path:nome_empresa>')
@@ -203,55 +272,53 @@ def delete_company(nome_empresa):
 def export_xlsx():
     ano = request.args.get('ano')
     mes = request.args.get('mes')
-
     if not ano or not mes:
         flash('Por favor, selecione um mês e ano no painel "Gerenciar Dados Mensais" antes de exportar.', 'warning')
         return redirect(url_for('index'))
-
     periodo_alvo = f"{ano}-{mes}"
     dados = carregar_dados()
     filename = f"export_contajur_{periodo_alvo}.xlsx"
-    
     wb = Workbook()
     ws = wb.active
     ws.title = f"Dados {mes}-{ano}"
-
-    headers = ['Empresa', 'CNPJ', 'Envio de Imposto', 'Ano', 'Mes', 'Status'] + CAMPOS_FATURAMENTO + CAMPOS_DESPESAS + CAMPOS_IMPOSTOS_FEDERAL + CAMPOS_IMPOSTOS_ESTADUAL + CAMPOS_IMPOSTOS_MUNICIPAL + CAMPOS_RETENCOES_FEDERAL
+    
+    headers = ['Empresa', 'CNPJ', 'Envio de Imposto', 'Ano', 'Mes', 'Status', 
+               'Faturamento Lançado', 'Faturamento Concluído', 
+               'Imp. Federais Lançado', 'Imp. Federais Concluído',
+               'Ret. Federais Lançado', 'Ret. Federais Concluído'] + \
+              CAMPOS_FATURAMENTO + CAMPOS_DESPESAS + CAMPOS_IMPOSTOS_FEDERAL + CAMPOS_IMPOSTOS_ESTADUAL + CAMPOS_IMPOSTOS_MUNICIPAL + CAMPOS_RETENCOES_FEDERAL
     ws.append(headers)
 
     for nome_empresa, detalhes_empresa in dados.items():
         periodos = detalhes_empresa.get('periodos', {})
         if periodo_alvo in periodos:
             categorias = periodos[periodo_alvo]
+            fat = categorias.get('faturamento', {})
+            imp_fed = categorias.get('impostos_federal', {})
+            ret_fed = categorias.get('retencoes_federal', {})
+            
             row_data = [
-                nome_empresa,
-                detalhes_empresa.get('cnpj', ''),
-                detalhes_empresa.get('envio_imposto', ''),
-                ano,
-                mes,
-                categorias.get('status', 'Em Aberto')
+                nome_empresa, detalhes_empresa.get('cnpj', ''), detalhes_empresa.get('envio_imposto', ''),
+                ano, mes, categorias.get('status', 'Em Aberto'),
+                "Sim" if fat.get('lancado') else "Não", "Sim" if fat.get('concluido') else "Não",
+                "Sim" if imp_fed.get('lancado') else "Não", "Sim" if imp_fed.get('concluido') else "Não",
+                "Sim" if ret_fed.get('lancado') else "Não", "Sim" if ret_fed.get('concluido') else "Não",
             ]
-            for campo in CAMPOS_FATURAMENTO: row_data.append(categorias.get('faturamento', {}).get(campo, 0.0))
+            for campo in CAMPOS_FATURAMENTO: row_data.append(fat.get(campo, 0.0))
             for campo in CAMPOS_DESPESAS: row_data.append(categorias.get('despesas', {}).get(campo, 0.0))
-            for campo in CAMPOS_IMPOSTOS_FEDERAL: row_data.append(categorias.get('impostos_federal', {}).get(campo, 0.0))
+            for campo in CAMPOS_IMPOSTOS_FEDERAL: row_data.append(imp_fed.get(campo, 0.0))
             for campo in CAMPOS_IMPOSTOS_ESTADUAL: row_data.append(categorias.get('impostos_estadual', {}).get(campo, 0.0))
             for campo in CAMPOS_IMPOSTOS_MUNICIPAL: row_data.append(categorias.get('impostos_municipal', {}).get(campo, 0.0))
-            for campo in CAMPOS_RETENCOES_FEDERAL: row_data.append(categorias.get('retencoes_federal', {}).get(campo, 0.0))
+            for campo in CAMPOS_RETENCOES_FEDERAL: row_data.append(ret_fed.get(campo, 0.0))
             ws.append(row_data)
             
     if ws.max_row <= 1:
         flash(f'Nenhum dado encontrado para o período {mes}/{ano} para ser exportado.', 'info')
         return redirect(url_for('index'))
-
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)
-
-    return Response(
-        buffer,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        headers={"Content-Disposition": f"attachment;filename={filename}"}
-    )
+    return Response(buffer, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers={"Content-Disposition": f"attachment;filename={filename}"})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))

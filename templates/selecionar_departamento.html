@@ -1,0 +1,35 @@
+{% extends "layout_no_sidebar.html" %}
+
+{% block content %}
+<!-- Botão "Voltar" com estilo atualizado e posicionado no topo -->
+<div class="mb-3">
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Voltar ao Painel Principal
+    </a>
+</div>
+
+<div class="row mt-3">
+    <div class="col-lg-6 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Selecionar Departamento</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    <strong>Empresa:</strong> {{ nome_empresa }}<br>
+                    <strong>Período:</strong> {{ periodo.split('-')[1] }}/{{ periodo.split('-')[0] }}
+                </p>
+                <p>Para qual departamento você deseja lançar os dados?</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('dados_empresa', nome_empresa=nome_empresa, periodo=periodo) }}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-calculator me-2"></i>Fiscal / Contábil
+                    </a>
+                    <button type="button" class="btn btn-secondary btn-lg" disabled>
+                        <i class="bi bi-people-fill me-2"></i>Departamento Pessoal (Em Breve)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

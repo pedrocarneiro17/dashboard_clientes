@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Contajur Clientes{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        /* CSS para o logo animado */
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+        .logo-icon {
+            position: relative;
+            /* Tamanho reduzido proporcionalmente */
+            width: 34px; 
+            height: 26px;
+            background-color: var(--bs-secondary-bg);
+            border: 1px solid var(--bs-border-color);
+            border-radius: 5px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 4px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .chart-bar {
+            background: #d32f2f; /* Vermelho para destaque */
+            border-radius: 2px;
+            margin: 0 1px;
+            animation: growUp 1.5s ease-in-out infinite;
+        }
+        /* Alturas e larguras ajustadas */
+        .chart-bar:nth-child(1) { width: 3px; height: 6px; animation-delay: 0s; }
+        .chart-bar:nth-child(2) { width: 3px; height: 10px; animation-delay: 0.2s; }
+        .chart-bar:nth-child(3) { width: 3px; height: 14px; animation-delay: 0.4s; }
+        .chart-bar:nth-child(4) { width: 3px; height: 18px; animation-delay: 0.6s; }
+
+        @keyframes growUp {
+            0%, 100% { transform: scaleY(0.3); opacity: 0.7; }
+            50% { transform: scaleY(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra de Navegação Superior Simples -->
+    <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <!-- ÍCONE ANIMADO SUBSTITUÍDO -->
+                <div class="logo-icon me-2">
+                    <div class="chart-bar"></div>
+                    <div class="chart-bar"></div>
+                    <div class="chart-bar"></div>
+                    <div class="chart-bar"></div>
+                </div>
+                Contajur Clientes
+            </a>
+            <div class="d-flex align-items: center">
+                <span class="navbar-text me-3 d-none d-sm-inline">Logado como: <strong>{{ session.username }}</strong></span>
+                <button class="btn btn-outline-secondary me-2" id="theme-toggler" type="button" title="Mudar tema">
+                    <i class="bi" id="theme-icon"></i>
+                </button>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo Principal -->
+    <main class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function() {
+            'use strict';
+            const htmlElement = document.documentElement;
+            const themeToggler = document.getElementById('theme-toggler');
+            const themeIcon = document.getElementById('theme-icon');
+            function setTheme(theme) {
+                htmlElement.dataset.bsTheme = theme;
+                if (themeIcon) { themeIcon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill'; }
+                localStorage.setItem('theme', theme);
+            }
+            if (themeToggler) {
+                themeToggler.addEventListener('click', () => {
+                    const newTheme = htmlElement.dataset.bsTheme === 'dark' ? 'light' : 'dark';
+                    setTheme(newTheme);
+                });
+            }
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            setTheme(savedTheme);
+        })();
+    </script>
+</body>
+</html>

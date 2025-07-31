@@ -11,7 +11,9 @@
                     "Revenda mercadorias tributárias": 0.0,
                     "Revenda mercadorias não tributárias": 0.0,
                     "Revenda de mercadoria monofásica": 0.0,
-                    "Locação": 0.0
+                    "Locação": 0.0,
+                    "lancado": true,
+                    "concluido": true
                 },
                 "despesas": {
                     "Compras para revenda": 0.0,
@@ -24,7 +26,9 @@
                     "PIS": 0.0,
                     "COFINS": 0.0,
                     "IRPJ": 0.0,
-                    "CSLL": 0.0
+                    "CSLL": 0.0,
+                    "lancado": true,
+                    "concluido": true
                 },
                 "impostos_estadual": {
                     "ICMS próprio": 0.0,
@@ -42,8 +46,11 @@
                     "CSRF (Retido)": 0.0,
                     "IRRF (Retido)": 0.0,
                     "INSS (Retido)": 0.0,
-                    "ISSQN (Retido)": 0.0
-                }
+                    "ISSQN (Retido)": 0.0,
+                    "lancado": true,
+                    "concluido": true
+                },
+                "status": "Em Aberto"
             },
             "2025-08": {
                 "faturamento": {
@@ -138,5 +145,10 @@
                 "status": "Finalizado"
             }
         }
+    },
+    "opo": {
+        "cnpj": "11.111.111/1111-11",
+        "envio_imposto": "Gclick",
+        "periodos": {}
     }
 }

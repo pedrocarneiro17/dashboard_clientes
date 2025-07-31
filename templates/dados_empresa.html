@@ -1,6 +1,4 @@
-{% extends "layout.html" %}
-
-{% block title %}Dados de {{ nome_empresa }}{% endblock %}
+{% extends "layout_no_sidebar.html" %}
 
 {% block content %}
 <div class="mb-3">
@@ -15,7 +13,6 @@
     </h3>
     <div>
         <span class="badge bg-secondary fs-6 me-2">Período: {{ periodo.split('-')[1] }}/{{ periodo.split('-')[0] }}</span>
-        <!-- Indicador de Status do Período -->
         <span class="badge fs-6 {% if status == 'Finalizado' %}bg-success{% else %}bg-warning text-dark{% endif %}">
             Status: {{ status }}
         </span>
@@ -43,7 +40,7 @@
         <!-- Aba Faturamento -->
         <div class="tab-pane fade show active p-4" id="nav-faturamento" role="tabpanel">
             {% for campo in campos_faturamento %}
-            <div class="row mb-2">
+            <div class="row mb-2 align-items-center">
                 <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
                 <div class="col-sm-8">
                     <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
@@ -53,13 +50,25 @@
                 </div>
             </div>
             {% endfor %}
+            <hr class="my-3">
+            <!-- CHECKBOXES ALINHADOS À ESQUERDA -->
+            <div class="mb-2">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="fat_lancado" id="fat_lancado" {% if dados.get('faturamento', {}).get('lancado') %}checked{% endif %}>
+                    <label class="form-check-label" for="fat_lancado">Lançado</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="fat_concluido" id="fat_concluido" {% if dados.get('faturamento', {}).get('concluido') %}checked{% endif %}>
+                    <label class="form-check-label" for="fat_concluido">Concluído</label>
+                </div>
+            </div>
         </div>
         
         <!-- Aba Impostos e Retenções -->
         <div class="tab-pane fade p-4" id="nav-impostos" role="tabpanel">
             <h6 class="text-primary border-bottom pb-2 mb-3">Impostos Federais</h6>
             {% for campo in campos_impostos_federal %}
-            <div class="row mb-2">
+            <div class="row mb-2 align-items-center">
                 <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
                 <div class="col-sm-8">
                     <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
@@ -69,10 +78,22 @@
                 </div>
             </div>
             {% endfor %}
+            <hr class="my-3">
+            <!-- CHECKBOXES ALINHADOS À ESQUERDA -->
+            <div class="mb-2">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="imp_fed_lancado" id="imp_fed_lancado" {% if dados.get('impostos_federal', {}).get('lancado') %}checked{% endif %}>
+                    <label class="form-check-label" for="imp_fed_lancado">Lançado</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="imp_fed_concluido" id="imp_fed_concluido" {% if dados.get('impostos_federal', {}).get('concluido') %}checked{% endif %}>
+                    <label class="form-check-label" for="imp_fed_concluido">Concluído</label>
+                </div>
+            </div>
 
             <h6 class="text-primary border-bottom pb-2 mt-4 mb-3">Impostos Estaduais</h6>
             {% for campo in campos_impostos_estadual %}
-            <div class="row mb-2">
+            <div class="row mb-2 align-items-center">
                 <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
                 <div class="col-sm-8">
                     <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
@@ -85,7 +106,7 @@
 
             <h6 class="text-primary border-bottom pb-2 mt-4 mb-3">Impostos Municipais</h6>
             {% for campo in campos_impostos_municipal %}
-            <div class="row mb-2">
+            <div class="row mb-2 align-items-center">
                 <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
                 <div class="col-sm-8">
                     <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
@@ -98,7 +119,7 @@
 
             <h6 class="text-primary border-bottom pb-2 mt-4 mb-3">Retenções Federais</h6>
             {% for campo in campos_retencoes_federal %}
-            <div class="row mb-2">
+            <div class="row mb-2 align-items-center">
                 <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
                 <div class="col-sm-8">
                     <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
@@ -108,12 +129,24 @@
                 </div>
             </div>
             {% endfor %}
+            <hr class="my-3">
+            <!-- CHECKBOXES ALINHADOS À ESQUERDA -->
+            <div class="mb-2">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="ret_fed_lancado" id="ret_fed_lancado" {% if dados.get('retencoes_federal', {}).get('lancado') %}checked{% endif %}>
+                    <label class="form-check-label" for="ret_fed_lancado">Lançado</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="ret_fed_concluido" id="ret_fed_concluido" {% if dados.get('retencoes_federal', {}).get('concluido') %}checked{% endif %}>
+                    <label class="form-check-label" for="ret_fed_concluido">Concluído</label>
+                </div>
+            </div>
         </div>
         
         <!-- Aba Despesas -->
         <div class="tab-pane fade p-4" id="nav-despesas" role="tabpanel">
              {% for campo in campos_despesas %}
-            <div class="row mb-2">
+            <div class="row mb-2 align-items-center">
                 <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
                 <div class="col-sm-8">
                     <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
@@ -126,7 +159,7 @@
         </div>
     </div>
 
-    <!-- ÁREA DE BOTÕES ATUALIZADA -->
+    <!-- ÁREA DE BOTÕES CORRIGIDA -->
     <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
         <div>
             <a href="{{ url_for('delete_company', nome_empresa=nome_empresa) }}"
@@ -138,12 +171,16 @@
         
         <div class="d-flex align-items-center">
             <a href="{{ url_for('index') }}" class="btn btn-secondary me-2">Cancelar</a>
-            <!-- Este botão usa a ação principal do formulário -->
             <button type="submit" class="btn btn-primary me-2">Salvar Dados</button>
             
-            <!-- CORREÇÃO: Botão Finalizar Mês com o atributo 'formaction' -->
-            {% if status != 'Finalizado' %}
-            <button type="submit" class="btn btn-success" 
+            <!-- LÓGICA CORRIGIDA PARA USAR 'formaction' -->
+            {% if status == 'Finalizado' %}
+            <button type="submit" class="btn btn-warning" 
+                    formaction="{{ url_for('reopen_month', nome_empresa=nome_empresa, periodo=periodo) }}">
+                <i class="bi bi-unlock"></i> Reabrir Mês
+            </button>
+            {% else %}
+            <button type="submit" class="btn btn-success"
                     formaction="{{ url_for('finalize_month', nome_empresa=nome_empresa, periodo=periodo) }}">
                 <i class="bi bi-check-circle"></i> Finalizar Mês
             </button>
