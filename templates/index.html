@@ -1,5 +1,7 @@
 {% extends "layout_sidebar.html" %}
 
+{% block title %}Painel Principal{% endblock %}
+
 {% block content %}
 <div class="row">
     <!-- Conteúdo principal agora ocupa uma única coluna centralizada -->
@@ -71,55 +73,46 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-12">
-                            <label for="search_status" class="form-label">Filtrar por Status</label>
-                            <select id="search_status" name="search_status" class="form-select" required>
-                                <option value="em_aberto" {% if search_status == 'em_aberto' %}selected{% endif %}>Em Aberto</option>
-                                <option value="finalizado" {% if search_status == 'finalizado' %}selected{% endif %}>Finalizado</option>
-                                <optgroup label="Faturamento">
-                                    <option value="fat_lancado" {% if search_status == 'fat_lancado' %}selected{% endif %}>Lançado</option>
-                                    <option value="fat_nao_lancado" {% if search_status == 'fat_nao_lancado' %}selected{% endif %}>Não Lançado</option>
-                                    <option value="fat_concluido" {% if search_status == 'fat_concluido' %}selected{% endif %}>Concluído</option>
-                                    <option value="fat_nao_concluido" {% if search_status == 'fat_nao_concluido' %}selected{% endif %}>Não Concluído</option>
-                                </optgroup>
-                                <optgroup label="Impostos Federais">
-                                    <option value="imp_fed_lancado" {% if search_status == 'imp_fed_lancado' %}selected{% endif %}>Lançado</option>
-                                    <option value="imp_fed_nao_lancado" {% if search_status == 'imp_fed_nao_lancado' %}selected{% endif %}>Não Lançado</option>
-                                    <option value="imp_fed_concluido" {% if search_status == 'imp_fed_concluido' %}selected{% endif %}>Concluído</option>
-                                    <option value="imp_fed_nao_concluido" {% if search_status == 'imp_fed_nao_concluido' %}selected{% endif %}>Não Concluído</option>
-                                </optgroup>
-                                <optgroup label="Retenções Federais">
-                                    <option value="ret_fed_lancado" {% if search_status == 'ret_fed_lancado' %}selected{% endif %}>Lançado</option>
-                                    <option value="ret_fed_nao_lancado" {% if search_status == 'ret_fed_nao_lancado' %}selected{% endif %}>Não Lançado</option>
-                                    <option value="ret_fed_concluido" {% if search_status == 'ret_fed_concluido' %}selected{% endif %}>Concluído</option>
-                                    <option value="ret_fed_nao_concluido" {% if search_status == 'ret_fed_nao_concluido' %}selected{% endif %}>Não Concluído</option>
-                                </optgroup>
-                            </select>
-                        </div>
                     </div>
-                    <button type="submit" class="btn btn-secondary w-100">Pesquisar</button>
+                    <button type="submit" class="btn btn-secondary w-100">Pesquisar Status Finalizado/Em Aberto</button>
                 </form>
 
-                <!-- Área de Resultados da Pesquisa -->
-                {% if empresas_resultado is not none %}
+                <!-- Área de Resultados da Pesquisa com Gráfico -->
+                <!-- CORREÇÃO: Adicionado 'periodo_pesquisado' à condição -->
+                {% if periodo_pesquisado and empresas_em_aberto is not none and empresas_finalizadas is not none %}
                 <hr class="my-4">
                 <h5 class="mb-3">Resultados para {{ periodo_pesquisado.split('-')[1] }}/{{ periodo_pesquisado.split('-')[0] }}</h5>
-                <h6>
-                    <span class="badge bg-info me-2">{{ empresas_resultado|length }}</span>
-                    Empresas com status: <strong>{{ status_pesquisado_label }}</strong>
-                </h6>
-                <ul class="list-group list-group-flush mt-3">
-                    {% for empresa in empresas_resultado %}
-                        <li class="list-group-item">{{ empresa }}</li>
-                    {% else %}
-                        <li class="list-group-item text-body-secondary">Nenhuma empresa encontrada com este critério.</li>
-                    {% endfor %}
-                </ul>
+                <div class="row align-items-center">
+                    <div class="col-md-5">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                    <div class="col-md-7">
+                        <h6><span class="badge bg-warning text-dark me-2">{{ empresas_em_aberto|length }}</span>Em Aberto</h6>
+                        <ul class="list-group list-group-flush mb-3">
+                            {% for empresa in empresas_em_aberto %}
+                                <li class="list-group-item py-1">{{ empresa }}</li>
+                            {% else %}
+                                <li class="list-group-item text-body-secondary py-1">Nenhuma empresa pendente.</li>
+                            {% endfor %}
+                        </ul>
+                        <h6><span class="badge bg-success me-2">{{ empresas_finalizadas|length }}</span>Finalizadas</h6>
+                        <ul class="list-group list-group-flush">
+                            {% for empresa in empresas_finalizadas %}
+                                <li class="list-group-item py-1">{{ empresa }}</li>
+                            {% else %}
+                                <li class="list-group-item text-body-secondary py-1">Nenhuma empresa finalizada.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<!-- Inclusão da biblioteca Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 // Script para abrir/editar dados
@@ -153,5 +146,54 @@ function mascaraCnpj(input) {
     value = value.replace(/(\d{4})(\d)/, '$1-$2');
     input.value = value.slice(0, 18);
 }
+
+// Script para criar o gráfico (só executa se houver resultados)
+{% if periodo_pesquisado and empresas_em_aberto is not none and empresas_finalizadas is not none %}
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    
+    const finalizadasCount = {{ empresas_finalizadas|length }};
+    const emAbertoCount = {{ empresas_em_aberto|length }};
+    const total = finalizadasCount + emAbertoCount;
+
+    // Evita criar o gráfico se não houver empresas
+    if (total > 0) {
+        new Chart(ctx, {
+            type: 'doughnut', // Gráfico de pizza "cortado"
+            data: {
+                labels: [
+                    `Finalizadas (${finalizadasCount})`, 
+                    `Em Aberto (${emAbertoCount})`
+                ],
+                datasets: [{
+                    label: 'Status das Empresas',
+                    data: [finalizadasCount, emAbertoCount],
+                    backgroundColor: [
+                        'rgba(25, 135, 84, 0.8)', // Verde (Finalizado)
+                        'rgba(255, 193, 7, 0.8)'  // Amarelo (Em Aberto)
+                    ],
+                    borderColor: [
+                        'rgba(25, 135, 84, 1)',
+                        'rgba(255, 193, 7, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Proporção de Status do Mês'
+                    }
+                }
+            }
+        });
+    }
+});
+{% endif %}
 </script>
 {% endblock %}

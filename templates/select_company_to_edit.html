@@ -1,0 +1,48 @@
+{% extends "layout_no_sidebar.html" %}
+
+{% block title %}Selecionar Empresa para Editar{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Voltar ao Painel Principal
+    </a>
+</div>
+
+<div class="row mt-3">
+    <div class="col-lg-8 col-md-10 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-pencil-square"></i> Selecionar Empresa para Editar</h5>
+            </div>
+            <div class="card-body">
+                <p>Escolha uma empresa na lista abaixo para editar suas informações cadastrais.</p>
+                <form id="form-select-edit">
+                    <div class="mb-3">
+                        <label for="empresa_edit_select" class="form-label">Empresas Ativas</label>
+                        <select id="empresa_edit_select" class="form-select" required>
+                            <option value="" disabled selected>-- Selecione uma empresa --</option>
+                            {% for nome in empresas.keys() %}
+                                <option value="{{ nome }}">{{ nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button class="btn btn-primary w-100 mt-3" type="submit">Continuar para Edição</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('form-select-edit').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const empresa = document.getElementById('empresa_edit_select').value;
+    if (!empresa) {
+        alert('Por favor, selecione uma empresa.');
+        return;
+    }
+    window.location.href = `/edit_company_page/${encodeURIComponent(empresa)}`;
+});
+</script>
+{% endblock %}

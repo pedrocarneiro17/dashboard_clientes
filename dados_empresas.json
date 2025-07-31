@@ -95,7 +95,8 @@
                 },
                 "status": "Finalizado"
             }
-        }
+        },
+        "active": true
     },
     "pedro": {
         "cnpj": "11.111.111/1111-11",
@@ -149,6 +150,13 @@
     "opo": {
         "cnpj": "11.111.111/1111-11",
         "envio_imposto": "Gclick",
+        "periodos": {}
+    },
+    "pp": {
+        "cnpj": "11.111.111/1111-11",
+        "envio_imposto": "Cliente impresso",
+        "prazo": "dia 06",
+        "active": true,
         "periodos": {}
     }
 }

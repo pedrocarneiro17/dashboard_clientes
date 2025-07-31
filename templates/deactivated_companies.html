@@ -1,0 +1,50 @@
+{% extends "layout_no_sidebar.html" %}
+
+{% block title %}Empresas Desativadas{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Voltar ao Painel Principal
+    </a>
+</div>
+
+<div class="card mt-3">
+    <div class="card-header">
+        <h5><i class="bi bi-archive-fill"></i> Empresas Desativadas</h5>
+    </div>
+    <div class="card-body">
+        {% if empresas %}
+            <ul class="list-group list-group-flush">
+                {% for nome, detalhes in empresas.items() %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold">{{ nome }}</div>
+                            <div class="small text-body-secondary">
+                                {% if detalhes.cnpj %}CNPJ: {{ detalhes.cnpj }}{% endif %}
+                            </div>
+                        </div>
+                        <div>
+                            <!-- Botão Reativar -->
+                            <form action="{{ url_for('reactivate_company', nome_empresa=nome) }}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Reativar
+                                </button>
+                            </form>
+                            <!-- Botão Excluir Permanentemente -->
+                            <form action="{{ url_for('delete_company_permanently', nome_empresa=nome) }}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('ATENÇÃO! Você tem certeza que deseja EXCLUIR PERMANENTEMENTE a empresa \'{{ nome }}\'? Todos os seus dados serão perdidos para sempre.');">
+                                    <i class="bi bi-trash-fill"></i> Excluir
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-center text-body-secondary">Não há empresas desativadas no momento.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

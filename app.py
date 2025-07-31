@@ -80,82 +80,40 @@ def logout():
 @login_required
 def index():
     dados = carregar_dados()
-    empresas_ordenadas = dict(sorted(dados.items()))
+    empresas_ativas = {nome: detalhes for nome, detalhes in dados.items() if detalhes.get('active', True)}
+    empresas_ordenadas = dict(sorted(empresas_ativas.items()))
     
     search_ano = request.args.get('search_ano')
     search_mes = request.args.get('search_mes')
-    search_status = request.args.get('search_status')
-    
-    empresas_resultado = None
+    empresas_em_aberto = None
+    empresas_finalizadas = None
     periodo_pesquisado = None
-    status_pesquisado_label = None
 
-    if search_ano and search_mes and search_status:
+    if search_ano and search_mes:
         periodo_pesquisado = f"{search_ano}-{search_mes}"
-        empresas_resultado = []
-        
-        status_labels = {
-            "em_aberto": "Em Aberto", "finalizado": "Finalizado",
-            "fat_lancado": "Faturamento Lançado", "fat_nao_lancado": "Faturamento Não Lançado",
-            "fat_concluido": "Faturamento Concluído", "fat_nao_concluido": "Faturamento Não Concluído",
-            "imp_fed_lancado": "Impostos Federais Lançado", "imp_fed_nao_lancado": "Impostos Federais Não Lançado",
-            "imp_fed_concluido": "Impostos Federais Concluído", "imp_fed_nao_concluido": "Impostos Federais Não Concluído",
-            "ret_fed_lancado": "Retenções Federais Lançado", "ret_fed_nao_lancado": "Retenções Federais Não Lançado",
-            "ret_fed_concluido": "Retenções Federais Concluído", "ret_fed_nao_concluido": "Retenções Federais Não Concluído"
-        }
-        status_pesquisado_label = status_labels.get(search_status, "")
-
+        empresas_em_aberto = []
+        empresas_finalizadas = []
         for nome, detalhes in empresas_ordenadas.items():
-            dados_periodo = detalhes.get('periodos', {}).get(periodo_pesquisado, {})
-            match = False
+            periodos = detalhes.get('periodos', {})
+            status_do_periodo = periodos.get(periodo_pesquisado, {}).get('status', 'Em Aberto')
             
-            if search_status == 'finalizado':
-                if dados_periodo.get('status') == 'Finalizado': match = True
-            elif search_status == 'em_aberto':
-                if dados_periodo.get('status', 'Em Aberto') == 'Em Aberto': match = True
-            # Faturamento
-            elif search_status == 'fat_lancado':
-                if dados_periodo.get('faturamento', {}).get('lancado', False): match = True
-            elif search_status == 'fat_nao_lancado':
-                if not dados_periodo.get('faturamento', {}).get('lancado', False): match = True
-            elif search_status == 'fat_concluido':
-                if dados_periodo.get('faturamento', {}).get('concluido', False): match = True
-            elif search_status == 'fat_nao_concluido':
-                if not dados_periodo.get('faturamento', {}).get('concluido', False): match = True
-            # Impostos Federais
-            elif search_status == 'imp_fed_lancado':
-                if dados_periodo.get('impostos_federal', {}).get('lancado', False): match = True
-            elif search_status == 'imp_fed_nao_lancado':
-                if not dados_periodo.get('impostos_federal', {}).get('lancado', False): match = True
-            elif search_status == 'imp_fed_concluido':
-                if dados_periodo.get('impostos_federal', {}).get('concluido', False): match = True
-            elif search_status == 'imp_fed_nao_concluido':
-                if not dados_periodo.get('impostos_federal', {}).get('concluido', False): match = True
-            # Retenções Federais
-            elif search_status == 'ret_fed_lancado':
-                if dados_periodo.get('retencoes_federal', {}).get('lancado', False): match = True
-            elif search_status == 'ret_fed_nao_lancado':
-                if not dados_periodo.get('retencoes_federal', {}).get('lancado', False): match = True
-            elif search_status == 'ret_fed_concluido':
-                if dados_periodo.get('retencoes_federal', {}).get('concluido', False): match = True
-            elif search_status == 'ret_fed_nao_concluido':
-                if not dados_periodo.get('retencoes_federal', {}).get('concluido', False): match = True
-            
-            if match:
-                empresas_resultado.append(nome)
+            if status_do_periodo == 'Finalizado':
+                empresas_finalizadas.append(nome)
+            else:
+                empresas_em_aberto.append(nome)
 
     now = datetime.now()
     meses = [f"{i:02d}" for i in range(1, 13)]
     anos = [str(i) for i in range(2010, now.year + 6)]
     
     return render_template('index.html', 
-                           empresas=empresas_ordenadas, meses=meses, anos=anos, 
+                           empresas=empresas_ordenadas, 
+                           meses=meses, anos=anos, 
                            ano_atual=str(now.year), mes_atual=f"{now.month:02d}",
-                           empresas_resultado=empresas_resultado,
+                           empresas_em_aberto=empresas_em_aberto,
+                           empresas_finalizadas=empresas_finalizadas,
                            periodo_pesquisado=periodo_pesquisado,
-                           search_ano=search_ano, search_mes=search_mes,
-                           search_status=search_status,
-                           status_pesquisado_label=status_pesquisado_label)
+                           search_ano=search_ano, search_mes=search_mes)
 
 @app.route('/add_company_page')
 @login_required
@@ -177,10 +135,47 @@ def add_company():
     dados[nome_empresa] = {
         'cnpj': request.form.get('cnpj', ''),
         'envio_imposto': request.form.get('envio_imposto', ''),
+        'prazo': request.form.get('prazo', ''),
+        'active': True,
         'periodos': {}
     }
     salvar_dados(dados)
     flash(f'Empresa "{nome_empresa}" adicionada com sucesso!', 'success')
+    return redirect(url_for('index'))
+
+# --- ROTA PARA A NOVA PÁGINA DE SELEÇÃO ---
+@app.route('/select_company_to_edit_page')
+@login_required
+def select_company_to_edit_page():
+    dados = carregar_dados()
+    empresas_ativas = {nome: detalhes for nome, detalhes in dados.items() if detalhes.get('active', True)}
+    empresas_ordenadas = dict(sorted(empresas_ativas.items()))
+    return render_template('select_company_to_edit.html', empresas=empresas_ordenadas)
+
+@app.route('/edit_company_page/<path:nome_empresa>')
+@login_required
+def edit_company_page(nome_empresa):
+    dados = carregar_dados()
+    empresa = dados.get(nome_empresa)
+    if not empresa:
+        flash('Empresa não encontrada.', 'danger')
+        return redirect(url_for('index'))
+    return render_template('edit_company.html', nome_empresa=nome_empresa, empresa=empresa)
+
+@app.route('/update_company/<path:nome_empresa>', methods=['POST'])
+@login_required
+def update_company(nome_empresa):
+    dados = carregar_dados()
+    if nome_empresa not in dados:
+        flash('Empresa não encontrada.', 'danger')
+        return redirect(url_for('index'))
+    
+    dados[nome_empresa]['cnpj'] = request.form.get('cnpj', '')
+    dados[nome_empresa]['envio_imposto'] = request.form.get('envio_imposto', '')
+    dados[nome_empresa]['prazo'] = request.form.get('prazo', '')
+    
+    salvar_dados(dados)
+    flash(f'Dados da empresa "{nome_empresa}" atualizados com sucesso!', 'success')
     return redirect(url_for('index'))
 
 @app.route('/selecionar_departamento/<path:nome_empresa>/<periodo>')
@@ -229,6 +224,50 @@ def dados_empresa(nome_empresa, periodo):
                            campos_impostos_federal=CAMPOS_IMPOSTOS_FEDERAL, campos_impostos_estadual=CAMPOS_IMPOSTOS_ESTADUAL,
                            campos_impostos_municipal=CAMPOS_IMPOSTOS_MUNICIPAL, campos_retencoes_federal=CAMPOS_RETENCOES_FEDERAL)
 
+@app.route('/deactivated_companies')
+@login_required
+def deactivated_companies():
+    dados = carregar_dados()
+    empresas_inativas = {nome: detalhes for nome, detalhes in dados.items() if not detalhes.get('active', True)}
+    empresas_ordenadas = dict(sorted(empresas_inativas.items()))
+    return render_template('deactivated_companies.html', empresas=empresas_ordenadas)
+
+@app.route('/deactivate_company/<path:nome_empresa>', methods=['POST'])
+@login_required
+def deactivate_company(nome_empresa):
+    dados = carregar_dados()
+    if nome_empresa in dados:
+        dados[nome_empresa]['active'] = False
+        salvar_dados(dados)
+        flash(f'Empresa "{nome_empresa}" foi desativada.', 'warning')
+    else:
+        flash('Empresa não encontrada.', 'danger')
+    return redirect(url_for('index'))
+
+@app.route('/reactivate_company/<path:nome_empresa>', methods=['POST'])
+@login_required
+def reactivate_company(nome_empresa):
+    dados = carregar_dados()
+    if nome_empresa in dados:
+        dados[nome_empresa]['active'] = True
+        salvar_dados(dados)
+        flash(f'Empresa "{nome_empresa}" foi reativada com sucesso.', 'success')
+    else:
+        flash('Empresa não encontrada.', 'danger')
+    return redirect(url_for('deactivated_companies'))
+
+@app.route('/delete_company_permanently/<path:nome_empresa>', methods=['POST'])
+@login_required
+def delete_company_permanently(nome_empresa):
+    dados = carregar_dados()
+    if nome_empresa in dados:
+        del dados[nome_empresa]
+        salvar_dados(dados)
+        flash(f'Empresa "{nome_empresa}" foi excluída permanentemente.', 'success')
+    else:
+        flash('Empresa não encontrada.', 'danger')
+    return redirect(url_for('deactivated_companies'))
+
 @app.route('/finalize_month/<path:nome_empresa>/<periodo>', methods=['POST'])
 @login_required
 def finalize_month(nome_empresa, periodo):
@@ -255,18 +294,6 @@ def reopen_month(nome_empresa, periodo):
         flash('Erro ao reabrir o mês.', 'danger')
     return redirect(url_for('dados_empresa', nome_empresa=nome_empresa, periodo=periodo))
 
-@app.route('/delete/<path:nome_empresa>')
-@login_required
-def delete_company(nome_empresa):
-    dados = carregar_dados()
-    if nome_empresa in dados:
-        del dados[nome_empresa]
-        salvar_dados(dados)
-        flash(f'Empresa "{nome_empresa}" e todos os seus dados foram excluídos com sucesso.', 'success')
-    else:
-        flash(f'Erro: Empresa "{nome_empresa}" não encontrada.', 'danger')
-    return redirect(url_for('index'))
-
 @app.route('/export_xlsx')
 @login_required
 def export_xlsx():
@@ -282,7 +309,7 @@ def export_xlsx():
     ws = wb.active
     ws.title = f"Dados {mes}-{ano}"
     
-    headers = ['Empresa', 'CNPJ', 'Envio de Imposto', 'Ano', 'Mes', 'Status', 
+    headers = ['Empresa', 'CNPJ', 'Envio de Imposto', 'Prazo', 'Ano', 'Mes', 'Status', 
                'Faturamento Lançado', 'Faturamento Concluído', 
                'Imp. Federais Lançado', 'Imp. Federais Concluído',
                'Ret. Federais Lançado', 'Ret. Federais Concluído'] + \
@@ -290,6 +317,7 @@ def export_xlsx():
     ws.append(headers)
 
     for nome_empresa, detalhes_empresa in dados.items():
+        if not detalhes_empresa.get('active', True): continue
         periodos = detalhes_empresa.get('periodos', {})
         if periodo_alvo in periodos:
             categorias = periodos[periodo_alvo]
@@ -299,7 +327,7 @@ def export_xlsx():
             
             row_data = [
                 nome_empresa, detalhes_empresa.get('cnpj', ''), detalhes_empresa.get('envio_imposto', ''),
-                ano, mes, categorias.get('status', 'Em Aberto'),
+                detalhes_empresa.get('prazo', ''), ano, mes, categorias.get('status', 'Em Aberto'),
                 "Sim" if fat.get('lancado') else "Não", "Sim" if fat.get('concluido') else "Não",
                 "Sim" if imp_fed.get('lancado') else "Não", "Sim" if imp_fed.get('concluido') else "Não",
                 "Sim" if ret_fed.get('lancado') else "Não", "Sim" if ret_fed.get('concluido') else "Não",

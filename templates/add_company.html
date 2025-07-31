@@ -1,7 +1,8 @@
 {% extends "layout_no_sidebar.html" %}
 
+{% block title %}Adicionar Nova Empresa{% endblock %}
+
 {% block content %}
-<!-- Botão "Voltar" adicionado -->
 <div class="mb-3">
     <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left"></i> Voltar ao Painel Principal
@@ -33,6 +34,15 @@
                             <option value="Simples conferência">Simples conferência</option>
                         </select>
                     </div>
+                    <!-- NOVO CAMPO PRAZO -->
+                    <div class="mb-3">
+                        <label for="prazo" class="form-label">Prazo</label>
+                        <select id="prazo" name="prazo" class="form-select" required>
+                            <option value="dia 06" selected>dia 06</option>
+                            <option value="dia 10">dia 10</option>
+                            <option value="dia 15">dia 15</option>
+                        </select>
+                    </div>
                     <button class="btn btn-success w-100 mt-3" type="submit">Cadastrar Empresa</button>
                 </form>
             </div>
@@ -41,7 +51,6 @@
 </div>
 
 <script>
-// Script para máscara de CNPJ
 function mascaraCnpj(input) {
     let value = input.value.replace(/\D/g, '');
     value = value.replace(/^(\d{2})(\d)/, '$1.$2');
