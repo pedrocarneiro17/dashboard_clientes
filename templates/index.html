@@ -77,27 +77,39 @@
                             <select id="search_status" name="search_status" class="form-select" required>
                                 <option value="em_aberto" {% if search_status == 'em_aberto' %}selected{% endif %}>Em Aberto</option>
                                 <option value="finalizado" {% if search_status == 'finalizado' %}selected{% endif %}>Finalizado</option>
-                                <optgroup label="Faturamento">
+                                <optgroup label="FATURAMENTO">
                                     <option value="fat_lancado" {% if search_status == 'fat_lancado' %}selected{% endif %}>Lançado</option>
                                     <option value="fat_nao_lancado" {% if search_status == 'fat_nao_lancado' %}selected{% endif %}>Não Lançado</option>
                                     <option value="fat_concluido" {% if search_status == 'fat_concluido' %}selected{% endif %}>Concluído</option>
                                     <option value="fat_nao_concluido" {% if search_status == 'fat_nao_concluido' %}selected{% endif %}>Não Concluído</option>
                                 </optgroup>
-                                <optgroup label="Impostos Federais">
+                                <optgroup label="IMPOSTOS FEDERAIS">
                                     <option value="imp_fed_lancado" {% if search_status == 'imp_fed_lancado' %}selected{% endif %}>Lançado</option>
                                     <option value="imp_fed_nao_lancado" {% if search_status == 'imp_fed_nao_lancado' %}selected{% endif %}>Não Lançado</option>
                                     <option value="imp_fed_concluido" {% if search_status == 'imp_fed_concluido' %}selected{% endif %}>Concluído</option>
                                     <option value="imp_fed_nao_concluido" {% if search_status == 'imp_fed_nao_concluido' %}selected{% endif %}>Não Concluído</option>
-                                    <option value="imp_fed_sem_notas" {% if search_status == 'imp_fed_sem_notas' %}selected{% endif %}>Sem Notas</option>
-                                    <option value="imp_fed_com_notas" {% if search_status == 'imp_fed_com_notas' %}selected{% endif %}>Com Notas</option>
-                                    <option value="imp_fed_dispensado" {% if search_status == 'imp_fed_dispensado' %}selected{% endif %}>Dispensado</option>
-                                    <option value="imp_fed_nao_dispensado" {% if search_status == 'imp_fed_nao_dispensado' %}selected{% endif %}>Não Dispensado</option>
                                 </optgroup>
-                                <optgroup label="Retenções Federais">
+                                <optgroup label="IMPOSTOS ESTADUAIS">
+                                    <option value="imp_est_lancado" {% if search_status == 'imp_est_lancado' %}selected{% endif %}>Lançado</option>
+                                    <option value="imp_est_nao_lancado" {% if search_status == 'imp_est_nao_lancado' %}selected{% endif %}>Não Lançado</option>
+                                    <option value="imp_est_concluido" {% if search_status == 'imp_est_concluido' %}selected{% endif %}>Concluído</option>
+                                    <option value="imp_est_nao_concluido" {% if search_status == 'imp_est_nao_concluido' %}selected{% endif %}>Não Concluído</option>
+                                </optgroup>
+                                <optgroup label="IMPOSTOS MUNICIPAIS">
+                                    <option value="imp_mun_lancado" {% if search_status == 'imp_mun_lancado' %}selected{% endif %}>Lançado</option>
+                                    <option value="imp_mun_nao_lancado" {% if search_status == 'imp_mun_nao_lancado' %}selected{% endif %}>Não Lançado</option>
+                                    <option value="imp_mun_concluido" {% if search_status == 'imp_mun_concluido' %}selected{% endif %}>Concluído</option>
+                                    <option value="imp_mun_nao_concluido" {% if search_status == 'imp_mun_nao_concluido' %}selected{% endif %}>Não Concluído</option>
+                                </optgroup>
+                                <optgroup label="RETENÇÕE FEDERAIS">
                                     <option value="ret_fed_lancado" {% if search_status == 'ret_fed_lancado' %}selected{% endif %}>Lançado</option>
                                     <option value="ret_fed_nao_lancado" {% if search_status == 'ret_fed_nao_lancado' %}selected{% endif %}>Não Lançado</option>
                                     <option value="ret_fed_concluido" {% if search_status == 'ret_fed_concluido' %}selected{% endif %}>Concluído</option>
                                     <option value="ret_fed_nao_concluido" {% if search_status == 'ret_fed_nao_concluido' %}selected{% endif %}>Não Concluído</option>
+                                    <option value="ret_fed_sem_notas" {% if search_status == 'ret_fed_sem_notas' %}selected{% endif %}>Sem Notas</option>
+                                    <option value="ret_fed_com_notas" {% if search_status == 'ret_fed_com_notas' %}selected{% endif %}>Com Notas</option>
+                                    <option value="ret_fed_dispensado" {% if search_status == 'ret_fed_dispensado' %}selected{% endif %}>Dispensado</option>
+                                    <option value="ret_fed_nao_dispensado" {% if search_status == 'ret_fed_nao_dispensado' %}selected{% endif %}>Não Dispensado</option>
                                 </optgroup>
                             </select>
                         </div>

@@ -89,15 +89,6 @@
                     <input class="form-check-input" type="checkbox" name="imp_fed_concluido" id="imp_fed_concluido" {% if dados.get('impostos_federal', {}).get('concluido') %}checked{% endif %}>
                     <label class="form-check-label" for="imp_fed_concluido">Concluído</label>
                 </div>
-                <!-- NOVOS CHECKBOXES -->
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" name="imp_fed_sem_notas" id="imp_fed_sem_notas" {% if dados.get('impostos_federal', {}).get('sem_notas') %}checked{% endif %}>
-                    <label class="form-check-label" for="imp_fed_sem_notas">Sem Notas</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" name="imp_fed_dispensado" id="imp_fed_dispensado" {% if dados.get('impostos_federal', {}).get('dispensado') %}checked{% endif %}>
-                    <label class="form-check-label" for="imp_fed_dispensado">Dispensado</label>
-                </div>
             </div>
 
             <h6 class="text-primary border-bottom pb-2 mt-4 mb-3">Impostos Estaduais</h6>
@@ -112,6 +103,17 @@
                 </div>
             </div>
             {% endfor %}
+            <hr class="my-3">
+            <div class="mb-2">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="imp_est_lancado" id="imp_est_lancado" {% if dados.get('impostos_estadual', {}).get('lancado') %}checked{% endif %}>
+                    <label class="form-check-label" for="imp_est_lancado">Lançado</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="imp_est_concluido" id="imp_est_concluido" {% if dados.get('impostos_estadual', {}).get('concluido') %}checked{% endif %}>
+                    <label class="form-check-label" for="imp_est_concluido">Concluído</label>
+                </div>
+            </div>
 
             <h6 class="text-primary border-bottom pb-2 mt-4 mb-3">Impostos Municipais</h6>
             {% for campo in campos_impostos_municipal %}
@@ -125,6 +127,17 @@
                 </div>
             </div>
             {% endfor %}
+            <hr class="my-3">
+            <div class="mb-2">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="imp_mun_lancado" id="imp_mun_lancado" {% if dados.get('impostos_municipal', {}).get('lancado') %}checked{% endif %}>
+                    <label class="form-check-label" for="imp_mun_lancado">Lançado</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="imp_mun_concluido" id="imp_mun_concluido" {% if dados.get('impostos_municipal', {}).get('concluido') %}checked{% endif %}>
+                    <label class="form-check-label" for="imp_mun_concluido">Concluído</label>
+                </div>
+            </div>
 
             <h6 class="text-primary border-bottom pb-2 mt-4 mb-3">Retenções Federais</h6>
             {% for campo in campos_retencoes_federal %}
@@ -147,6 +160,14 @@
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" name="ret_fed_concluido" id="ret_fed_concluido" {% if dados.get('retencoes_federal', {}).get('concluido') %}checked{% endif %}>
                     <label class="form-check-label" for="ret_fed_concluido">Concluído</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="ret_fed_sem_notas" id="ret_fed_sem_notas" {% if dados.get('retencoes_federal', {}).get('sem_notas') %}checked{% endif %}>
+                    <label class="form-check-label" for="ret_fed_sem_notas">Sem Notas</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="ret_fed_dispensado" id="ret_fed_dispensado" {% if dados.get('retencoes_federal', {}).get('dispensado') %}checked{% endif %}>
+                    <label class="form-check-label" for="ret_fed_dispensado">Dispensado</label>
                 </div>
             </div>
         </div>
