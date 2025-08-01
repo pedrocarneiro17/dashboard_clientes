@@ -8,17 +8,27 @@
         <i class="bi bi-arrow-left"></i> Voltar ao Painel Principal
     </a>
 </div>
+
 <div class="d-flex justify-content-between align-items-center mb-2">
-    <h3><i class="bi bi-file-earmark-text"></i> Dados para <strong>{{ nome_empresa }}</strong></h3>
+    <h3>
+        <i class="bi bi-file-earmark-text"></i> Dados para <strong>{{ nome_empresa }}</strong>
+    </h3>
     <div>
         <span class="badge bg-secondary fs-6 me-2">Período: {{ periodo.split('-')[1] }}/{{ periodo.split('-')[0] }}</span>
-        <span class="badge fs-6 {% if status == 'Finalizado' %}bg-success{% else %}bg-warning text-dark{% endif %}">Status: {{ status }}</span>
+        <span class="badge fs-6 {% if status == 'Finalizado' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+            Status: {{ status }}
+        </span>
     </div>
 </div>
+
 <div class="mb-4 text-body-secondary">
-    {% if dados_empresa.cnpj %}<strong>CNPJ:</strong> {{ dados_empresa.cnpj }}{% endif %}<br>
+    {% if dados_empresa.cnpj %}
+        <strong>CNPJ:</strong> {{ dados_empresa.cnpj }}
+    {% endif %}
+    <br>
     <strong>Envio de Imposto:</strong> {{ dados_empresa.envio_imposto }}
 </div>
+
 <form method="post">
     <nav>
         <div class="nav nav-tabs" id="nav-tab" role="tablist">
@@ -27,50 +37,137 @@
             <button class="nav-link" id="nav-despesas-tab" data-bs-toggle="tab" data-bs-target="#nav-despesas" type="button" role="tab">Despesas</button>
         </div>
     </nav>
+
     <div class="tab-content card" id="nav-tabContent">
         <!-- Aba Faturamento -->
         <div class="tab-pane fade show active p-4" id="nav-faturamento" role="tabpanel">
             {% for campo in campos_faturamento %}
             <div class="row mb-2 align-items-center">
                 <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
-                <div class="col-sm-8"><input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" value="{{ dados.get('faturamento', {}).get(campo, '')|string|replace('.', ',') }}" placeholder="0,00" oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');"></div>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
+                           value="{{ dados.get('faturamento', {}).get(campo, '')|string|replace('.', ',') }}"
+                           placeholder="0,00"
+                           oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');">
+                </div>
             </div>
             {% endfor %}
             <hr class="my-3">
-            <div class="mb-2"><div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="fat_lancado" id="fat_lancado" {% if dados.get('faturamento', {}).get('lancado') %}checked{% endif %}><label class="form-check-label" for="fat_lancado">Lançado</label></div><div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="fat_concluido" id="fat_concluido" {% if dados.get('faturamento', {}).get('concluido') %}checked{% endif %}><label class="form-check-label" for="fat_concluido">Concluído</label></div></div>
+            <div class="mb-2">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="fat_lancado" id="fat_lancado" {% if dados.get('faturamento', {}).get('lancado') %}checked{% endif %}>
+                    <label class="form-check-label" for="fat_lancado">Lançado</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="fat_concluido" id="fat_concluido" {% if dados.get('faturamento', {}).get('concluido') %}checked{% endif %}>
+                    <label class="form-check-label" for="fat_concluido">Concluído</label>
+                </div>
+            </div>
         </div>
+        
         <!-- Aba Impostos e Retenções -->
         <div class="tab-pane fade p-4" id="nav-impostos" role="tabpanel">
             <h6 class="text-primary border-bottom pb-2 mb-3">Impostos Federais</h6>
             {% for campo in campos_impostos_federal %}
-            <div class="row mb-2 align-items-center"><label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label><div class="col-sm-8"><input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" value="{{ dados.get('impostos_federal', {}).get(campo, '')|string|replace('.', ',') }}" placeholder="0,00" oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');"></div></div>
+            <div class="row mb-2 align-items-center">
+                <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
+                           value="{{ dados.get('impostos_federal', {}).get(campo, '')|string|replace('.', ',') }}"
+                           placeholder="0,00"
+                           oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');">
+                </div>
+            </div>
             {% endfor %}
             <hr class="my-3">
-            <div class="mb-2"><div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="imp_fed_lancado" id="imp_fed_lancado" {% if dados.get('impostos_federal', {}).get('lancado') %}checked{% endif %}><label class="form-check-label" for="imp_fed_lancado">Lançado</label></div><div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="imp_fed_concluido" id="imp_fed_concluido" {% if dados.get('impostos_federal', {}).get('concluido') %}checked{% endif %}><label class="form-check-label" for="imp_fed_concluido">Concluído</label></div></div>
+            <div class="mb-2">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="imp_fed_lancado" id="imp_fed_lancado" {% if dados.get('impostos_federal', {}).get('lancado') %}checked{% endif %}>
+                    <label class="form-check-label" for="imp_fed_lancado">Lançado</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="imp_fed_concluido" id="imp_fed_concluido" {% if dados.get('impostos_federal', {}).get('concluido') %}checked{% endif %}>
+                    <label class="form-check-label" for="imp_fed_concluido">Concluído</label>
+                </div>
+                <!-- NOVOS CHECKBOXES -->
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="imp_fed_sem_notas" id="imp_fed_sem_notas" {% if dados.get('impostos_federal', {}).get('sem_notas') %}checked{% endif %}>
+                    <label class="form-check-label" for="imp_fed_sem_notas">Sem Notas</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="imp_fed_dispensado" id="imp_fed_dispensado" {% if dados.get('impostos_federal', {}).get('dispensado') %}checked{% endif %}>
+                    <label class="form-check-label" for="imp_fed_dispensado">Dispensado</label>
+                </div>
+            </div>
+
             <h6 class="text-primary border-bottom pb-2 mt-4 mb-3">Impostos Estaduais</h6>
             {% for campo in campos_impostos_estadual %}
-            <div class="row mb-2 align-items-center"><label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label><div class="col-sm-8"><input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" value="{{ dados.get('impostos_estadual', {}).get(campo, '')|string|replace('.', ',') }}" placeholder="0,00" oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');"></div></div>
+            <div class="row mb-2 align-items-center">
+                <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
+                           value="{{ dados.get('impostos_estadual', {}).get(campo, '')|string|replace('.', ',') }}"
+                           placeholder="0,00"
+                           oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');">
+                </div>
+            </div>
             {% endfor %}
+
             <h6 class="text-primary border-bottom pb-2 mt-4 mb-3">Impostos Municipais</h6>
             {% for campo in campos_impostos_municipal %}
-            <div class="row mb-2 align-items-center"><label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label><div class="col-sm-8"><input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" value="{{ dados.get('impostos_municipal', {}).get(campo, '')|string|replace('.', ',') }}" placeholder="0,00" oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');"></div></div>
+            <div class="row mb-2 align-items-center">
+                <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
+                           value="{{ dados.get('impostos_municipal', {}).get(campo, '')|string|replace('.', ',') }}"
+                           placeholder="0,00"
+                           oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');">
+                </div>
+            </div>
             {% endfor %}
+
             <h6 class="text-primary border-bottom pb-2 mt-4 mb-3">Retenções Federais</h6>
             {% for campo in campos_retencoes_federal %}
-            <div class="row mb-2 align-items-center"><label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label><div class="col-sm-8"><input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" value="{{ dados.get('retencoes_federal', {}).get(campo, '')|string|replace('.', ',') }}" placeholder="0,00" oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');"></div></div>
+            <div class="row mb-2 align-items-center">
+                <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
+                           value="{{ dados.get('retencoes_federal', {}).get(campo, '')|string|replace('.', ',') }}"
+                           placeholder="0,00"
+                           oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');">
+                </div>
+            </div>
             {% endfor %}
             <hr class="my-3">
-            <div class="mb-2"><div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="ret_fed_lancado" id="ret_fed_lancado" {% if dados.get('retencoes_federal', {}).get('lancado') %}checked{% endif %}><label class="form-check-label" for="ret_fed_lancado">Lançado</label></div><div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="ret_fed_concluido" id="ret_fed_concluido" {% if dados.get('retencoes_federal', {}).get('concluido') %}checked{% endif %}><label class="form-check-label" for="ret_fed_concluido">Concluído</label></div></div>
+            <div class="mb-2">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="ret_fed_lancado" id="ret_fed_lancado" {% if dados.get('retencoes_federal', {}).get('lancado') %}checked{% endif %}>
+                    <label class="form-check-label" for="ret_fed_lancado">Lançado</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="ret_fed_concluido" id="ret_fed_concluido" {% if dados.get('retencoes_federal', {}).get('concluido') %}checked{% endif %}>
+                    <label class="form-check-label" for="ret_fed_concluido">Concluído</label>
+                </div>
+            </div>
         </div>
+        
         <!-- Aba Despesas -->
         <div class="tab-pane fade p-4" id="nav-despesas" role="tabpanel">
              {% for campo in campos_despesas %}
-            <div class="row mb-2 align-items-center"><label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label><div class="col-sm-8"><input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" value="{{ dados.get('despesas', {}).get(campo, '')|string|replace('.', ',') }}" placeholder="0,00" oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');"></div></div>
+            <div class="row mb-2 align-items-center">
+                <label for="{{ campo }}" class="col-sm-4 col-form-label">{{ campo }}</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
+                           value="{{ dados.get('despesas', {}).get(campo, '')|string|replace('.', ',') }}"
+                           placeholder="0,00"
+                           oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');">
+                </div>
+            </div>
             {% endfor %}
         </div>
     </div>
+
     <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
-        <!-- BOTÃO ATUALIZADO PARA DESATIVAR -->
         <div>
             <button type="submit" class="btn btn-link text-danger" 
                     formaction="{{ url_for('deactivate_company', nome_empresa=nome_empresa) }}"

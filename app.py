@@ -16,9 +16,9 @@ NOME_ARQUIVO_DADOS = 'dados_empresas.json'
 USUARIO_PADRAO = 'admin'
 SENHA_PADRAO = 'contajur2025'
 
-# --- Listas de Campos ---
+# --- Listas de Campos ATUALIZADAS ---
 CAMPOS_FATURAMENTO = [
-    "Serviços tributados", "Serviços retidos", "Venda (indústria)",
+    "Serviços tributados", "Serviços retidos", "Venda (indústria/imóveis)",
     "Revenda mercadorias tributárias", "Revenda mercadorias não tributárias",
     "Revenda de mercadoria monofásica", "Locação"
 ]
@@ -26,7 +26,7 @@ CAMPOS_DESPESAS = [
     "Compras para revenda", "Compras para uso/consumo",
     "Compras para ativo imobilizado", "Serviços tomados com nota fiscal"
 ]
-CAMPOS_IMPOSTOS_FEDERAL = ["Simples", "PIS", "COFINS", "IRPJ", "CSLL"]
+CAMPOS_IMPOSTOS_FEDERAL = ["Simples", "PIS", "COFINS", "IRPJ", "CSLL", "IOF", "IPI"]
 CAMPOS_IMPOSTOS_ESTADUAL = ["ICMS próprio", "ICMS ST próprio", "DIFAL", "Antecipação", "ICMS ST Entradas", "FEM"]
 CAMPOS_IMPOSTOS_MUNICIPAL = ["ISSQN a pagar", "ISSQN Retido (NF própria)"]
 CAMPOS_RETENCOES_FEDERAL = ["CSRF (Retido)", "IRRF (Retido)", "INSS (Retido)", "ISSQN (Retido)"]
@@ -85,35 +85,88 @@ def index():
     
     search_ano = request.args.get('search_ano')
     search_mes = request.args.get('search_mes')
-    empresas_em_aberto = None
-    empresas_finalizadas = None
+    search_status = request.args.get('search_status')
+    
+    empresas_resultado = None
     periodo_pesquisado = None
+    status_pesquisado_label = None
 
-    if search_ano and search_mes:
+    if search_ano and search_mes and search_status:
         periodo_pesquisado = f"{search_ano}-{search_mes}"
-        empresas_em_aberto = []
-        empresas_finalizadas = []
+        empresas_resultado = []
+        
+        status_labels = {
+            "em_aberto": "Em Aberto", "finalizado": "Finalizado",
+            "fat_lancado": "Faturamento Lançado", "fat_nao_lancado": "Faturamento Não Lançado",
+            "fat_concluido": "Faturamento Concluído", "fat_nao_concluido": "Faturamento Não Concluído",
+            "imp_fed_lancado": "Impostos Federais Lançado", "imp_fed_nao_lancado": "Impostos Federais Não Lançado",
+            "imp_fed_concluido": "Impostos Federais Concluído", "imp_fed_nao_concluido": "Impostos Federais Não Concluído",
+            "imp_fed_sem_notas": "Impostos Federais Sem Notas", "imp_fed_com_notas": "Impostos Federais Com Notas",
+            "imp_fed_dispensado": "Impostos Federais Dispensado", "imp_fed_nao_dispensado": "Impostos Federais Não Dispensado",
+            "ret_fed_lancado": "Retenções Federais Lançado", "ret_fed_nao_lancado": "Retenções Federais Não Lançado",
+            "ret_fed_concluido": "Retenções Federais Concluído", "ret_fed_nao_concluido": "Retenções Federais Não Concluído"
+        }
+        status_pesquisado_label = status_labels.get(search_status, "")
+
         for nome, detalhes in empresas_ordenadas.items():
-            periodos = detalhes.get('periodos', {})
-            status_do_periodo = periodos.get(periodo_pesquisado, {}).get('status', 'Em Aberto')
+            dados_periodo = detalhes.get('periodos', {}).get(periodo_pesquisado, {})
+            match = False
             
-            if status_do_periodo == 'Finalizado':
-                empresas_finalizadas.append(nome)
-            else:
-                empresas_em_aberto.append(nome)
+            if search_status == 'finalizado':
+                if dados_periodo.get('status') == 'Finalizado': match = True
+            elif search_status == 'em_aberto':
+                if dados_periodo.get('status', 'Em Aberto') == 'Em Aberto': match = True
+            # Faturamento
+            elif search_status == 'fat_lancado':
+                if dados_periodo.get('faturamento', {}).get('lancado', False): match = True
+            elif search_status == 'fat_nao_lancado':
+                if not dados_periodo.get('faturamento', {}).get('lancado', False): match = True
+            elif search_status == 'fat_concluido':
+                if dados_periodo.get('faturamento', {}).get('concluido', False): match = True
+            elif search_status == 'fat_nao_concluido':
+                if not dados_periodo.get('faturamento', {}).get('concluido', False): match = True
+            # Impostos Federais
+            elif search_status == 'imp_fed_lancado':
+                if dados_periodo.get('impostos_federal', {}).get('lancado', False): match = True
+            elif search_status == 'imp_fed_nao_lancado':
+                if not dados_periodo.get('impostos_federal', {}).get('lancado', False): match = True
+            elif search_status == 'imp_fed_concluido':
+                if dados_periodo.get('impostos_federal', {}).get('concluido', False): match = True
+            elif search_status == 'imp_fed_nao_concluido':
+                if not dados_periodo.get('impostos_federal', {}).get('concluido', False): match = True
+            elif search_status == 'imp_fed_sem_notas':
+                if dados_periodo.get('impostos_federal', {}).get('sem_notas', False): match = True
+            elif search_status == 'imp_fed_com_notas':
+                if not dados_periodo.get('impostos_federal', {}).get('sem_notas', False): match = True
+            elif search_status == 'imp_fed_dispensado':
+                if dados_periodo.get('impostos_federal', {}).get('dispensado', False): match = True
+            elif search_status == 'imp_fed_nao_dispensado':
+                if not dados_periodo.get('impostos_federal', {}).get('dispensado', False): match = True
+            # Retenções Federais
+            elif search_status == 'ret_fed_lancado':
+                if dados_periodo.get('retencoes_federal', {}).get('lancado', False): match = True
+            elif search_status == 'ret_fed_nao_lancado':
+                if not dados_periodo.get('retencoes_federal', {}).get('lancado', False): match = True
+            elif search_status == 'ret_fed_concluido':
+                if dados_periodo.get('retencoes_federal', {}).get('concluido', False): match = True
+            elif search_status == 'ret_fed_nao_concluido':
+                if not dados_periodo.get('retencoes_federal', {}).get('concluido', False): match = True
+            
+            if match:
+                empresas_resultado.append(nome)
 
     now = datetime.now()
     meses = [f"{i:02d}" for i in range(1, 13)]
     anos = [str(i) for i in range(2010, now.year + 6)]
     
     return render_template('index.html', 
-                           empresas=empresas_ordenadas, 
-                           meses=meses, anos=anos, 
+                           empresas=empresas_ordenadas, meses=meses, anos=anos, 
                            ano_atual=str(now.year), mes_atual=f"{now.month:02d}",
-                           empresas_em_aberto=empresas_em_aberto,
-                           empresas_finalizadas=empresas_finalizadas,
+                           empresas_resultado=empresas_resultado,
                            periodo_pesquisado=periodo_pesquisado,
-                           search_ano=search_ano, search_mes=search_mes)
+                           search_ano=search_ano, search_mes=search_mes,
+                           search_status=search_status,
+                           status_pesquisado_label=status_pesquisado_label)
 
 @app.route('/add_company_page')
 @login_required
@@ -143,7 +196,6 @@ def add_company():
     flash(f'Empresa "{nome_empresa}" adicionada com sucesso!', 'success')
     return redirect(url_for('index'))
 
-# --- ROTA PARA A NOVA PÁGINA DE SELEÇÃO ---
 @app.route('/select_company_to_edit_page')
 @login_required
 def select_company_to_edit_page():
@@ -207,6 +259,8 @@ def dados_empresa(nome_empresa, periodo):
         dados_periodo['faturamento']['concluido'] = 'fat_concluido' in request.form
         dados_periodo['impostos_federal']['lancado'] = 'imp_fed_lancado' in request.form
         dados_periodo['impostos_federal']['concluido'] = 'imp_fed_concluido' in request.form
+        dados_periodo['impostos_federal']['sem_notas'] = 'imp_fed_sem_notas' in request.form
+        dados_periodo['impostos_federal']['dispensado'] = 'imp_fed_dispensado' in request.form
         dados_periodo['retencoes_federal']['lancado'] = 'ret_fed_lancado' in request.form
         dados_periodo['retencoes_federal']['concluido'] = 'ret_fed_concluido' in request.form
 
@@ -312,6 +366,7 @@ def export_xlsx():
     headers = ['Empresa', 'CNPJ', 'Envio de Imposto', 'Prazo', 'Ano', 'Mes', 'Status', 
                'Faturamento Lançado', 'Faturamento Concluído', 
                'Imp. Federais Lançado', 'Imp. Federais Concluído',
+               'Imp. Federais Sem Notas', 'Imp. Federais Dispensado',
                'Ret. Federais Lançado', 'Ret. Federais Concluído'] + \
               CAMPOS_FATURAMENTO + CAMPOS_DESPESAS + CAMPOS_IMPOSTOS_FEDERAL + CAMPOS_IMPOSTOS_ESTADUAL + CAMPOS_IMPOSTOS_MUNICIPAL + CAMPOS_RETENCOES_FEDERAL
     ws.append(headers)
@@ -330,6 +385,7 @@ def export_xlsx():
                 detalhes_empresa.get('prazo', ''), ano, mes, categorias.get('status', 'Em Aberto'),
                 "Sim" if fat.get('lancado') else "Não", "Sim" if fat.get('concluido') else "Não",
                 "Sim" if imp_fed.get('lancado') else "Não", "Sim" if imp_fed.get('concluido') else "Não",
+                "Sim" if imp_fed.get('sem_notas') else "Não", "Sim" if imp_fed.get('dispensado') else "Não",
                 "Sim" if ret_fed.get('lancado') else "Não", "Sim" if ret_fed.get('concluido') else "Não",
             ]
             for campo in CAMPOS_FATURAMENTO: row_data.append(fat.get(campo, 0.0))
