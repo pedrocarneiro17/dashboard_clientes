@@ -158,5 +158,115 @@
         "prazo": "dia 06",
         "active": true,
         "periodos": {}
+    },
+    "lopes": {
+        "cnpj": "07.688.752/0001-36",
+        "envio_imposto": "Gclick",
+        "prazo": "dia 06",
+        "active": true,
+        "periodos": {
+            "2025-08": {
+                "departamento_pessoal": {
+                    "CNPJ": "07.688.752/0001-36",
+                    "SITUACAO_COLABORADORES": "Ativos: 3 Admitidos: 0 Demitidos: 0 Transferidos: 0 Acidente trabalho: 0 Maternidade: 0 Militar: 0 Doença: 0 Outras sit.: 0",
+                    "COLABORADORES": [
+                        {
+                            "nome": "OSMEIRE GRAZIELA DELFINO",
+                            "admissao": "29/10/2022"
+                        },
+                        {
+                            "nome": "ROSELENE DE CARVALHO",
+                            "admissao": "11/01/2024"
+                        }
+                    ],
+                    "LIQUIDO_EMPREGADORES": "5.786,00",
+                    "LIQUIDO_AUTONOMOS": "1.351,00",
+                    "VALOR_GPS": "R$ 741,64",
+                    "VALOR_GFD_MENSAL": "R$ 508,07",
+                    "VALOR_GFD_RESCISORIA": "R$ 0,00"
+                }
+            }
+        }
+    },
+    "miirante": {
+        "cnpj": "23.833.668/0001-15",
+        "envio_imposto": "Gclick",
+        "prazo": "dia 06",
+        "active": true,
+        "periodos": {
+            "2025-08": {
+                "departamento_pessoal": {
+                    "CNPJ": "23.833.668/0001-15",
+                    "SITUACAO_COLABORADORES": "Ativos: 16 Admitidos: 0 Demitidos: 0 Transferidos: 0 Acidente trabalho: 0 Maternidade: 0 Militar: 0 Doença: 1 Outras sit.: 1",
+                    "COLABORADORES": [
+                        {
+                            "nome": "ANGELICA JUNIA PEREIRA",
+                            "admissao": "01/06/2025"
+                        },
+                        {
+                            "nome": "AUGUSTA IZABEL FONSECA",
+                            "admissao": "13/02/2025"
+                        },
+                        {
+                            "nome": "ELENA DE MATOS ARAUJO",
+                            "admissao": "06/06/2006"
+                        },
+                        {
+                            "nome": "GABRIELA LUANA SILVA MACIEL",
+                            "admissao": "03/04/2025"
+                        },
+                        {
+                            "nome": "GERALDO LINO FERREIRA",
+                            "admissao": "11/05/2011"
+                        },
+                        {
+                            "nome": "GLEIDE RODRIGUES DOS SANTOS",
+                            "admissao": "21/05/2025"
+                        },
+                        {
+                            "nome": "JOSE ROBERTO CORREIA",
+                            "admissao": "01/04/2019"
+                        },
+                        {
+                            "nome": "MARIA DA CONCEICAO SILVA",
+                            "admissao": "09/08/2017"
+                        },
+                        {
+                            "nome": "MARIA J. PEREIRA TEIXEIRA",
+                            "admissao": "07/02/1993"
+                        },
+                        {
+                            "nome": "NATHAN LUCAS SILVA DE FREITAS",
+                            "admissao": "01/10/2024"
+                        },
+                        {
+                            "nome": "RAQUEL SOARES MARTINS",
+                            "admissao": "02/05/2025"
+                        },
+                        {
+                            "nome": "ROBERTO DE PAULA UMBELINO",
+                            "admissao": "01/09/2022"
+                        },
+                        {
+                            "nome": "SERGIO DE OLIVEIRA",
+                            "admissao": "01/03/2013"
+                        },
+                        {
+                            "nome": "SHIRLEY MARIA FERREIRA",
+                            "admissao": "15/09/2006"
+                        },
+                        {
+                            "nome": "VILMA DA SILVA RIBEIRO",
+                            "admissao": "16/04/2025"
+                        }
+                    ],
+                    "LIQUIDO_EMPREGADORES": "34.230,00",
+                    "LIQUIDO_AUTONOMOS": "1.351,00",
+                    "VALOR_GPS": "R$ 14.504,70",
+                    "VALOR_GFD_MENSAL": "R$ 3.129,30",
+                    "VALOR_GFD_RESCISORIA": "R$ 0,00"
+                }
+            }
+        }
     }
 }

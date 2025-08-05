@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="row">
+    <!-- Conteúdo principal agora ocupa uma única coluna centralizada -->
     <div class="col-lg-10 mx-auto">
         <!-- Card de Gerenciamento -->
         <div class="card mb-4">
@@ -73,10 +74,9 @@
                             </select>
                         </div>
                         <div class="col-md-12">
-                            <label for="search_status" class="form-label">Filtrar por Status</label>
-                            <select id="search_status" name="search_status" class="form-select" required>
-                                <option value="em_aberto" {% if search_status == 'em_aberto' %}selected{% endif %}>Em Aberto</option>
-                                <option value="finalizado" {% if search_status == 'finalizado' %}selected{% endif %}>Finalizado</option>
+                            <label for="search_status" class="form-label">Filtrar por Status (Opcional)</label>
+                            <select id="search_status" name="search_status" class="form-select">
+                                <option value="" {% if not search_status %}selected{% endif %}>-- Nenhum Filtro Adicional --</option>
                                 <optgroup label="FATURAMENTO">
                                     <option value="fat_lancado" {% if search_status == 'fat_lancado' %}selected{% endif %}>Lançado</option>
                                     <option value="fat_nao_lancado" {% if search_status == 'fat_nao_lancado' %}selected{% endif %}>Não Lançado</option>
@@ -101,13 +101,13 @@
                                     <option value="imp_mun_concluido" {% if search_status == 'imp_mun_concluido' %}selected{% endif %}>Concluído</option>
                                     <option value="imp_mun_nao_concluido" {% if search_status == 'imp_mun_nao_concluido' %}selected{% endif %}>Não Concluído</option>
                                 </optgroup>
-                                <optgroup label="RETENÇÕE FEDERAIS">
+                                <optgroup label="RETENÇÕES FEDERAIS">
                                     <option value="ret_fed_lancado" {% if search_status == 'ret_fed_lancado' %}selected{% endif %}>Lançado</option>
                                     <option value="ret_fed_nao_lancado" {% if search_status == 'ret_fed_nao_lancado' %}selected{% endif %}>Não Lançado</option>
                                     <option value="ret_fed_concluido" {% if search_status == 'ret_fed_concluido' %}selected{% endif %}>Concluído</option>
                                     <option value="ret_fed_nao_concluido" {% if search_status == 'ret_fed_nao_concluido' %}selected{% endif %}>Não Concluído</option>
                                     <option value="ret_fed_sem_notas" {% if search_status == 'ret_fed_sem_notas' %}selected{% endif %}>Sem Notas</option>
-                                    <option value="ret_fed_com_notas" {% if search_status == 'ret_fed_com_notas' %}selected{% endif %}>Com Notas</option>
+                                    <option value="ret_fed_nao_sem_notas" {% if search_status == 'ret_fed_nao_sem_notas' %}selected{% endif %}>Com Notas</option>
                                     <option value="ret_fed_dispensado" {% if search_status == 'ret_fed_dispensado' %}selected{% endif %}>Dispensado</option>
                                     <option value="ret_fed_nao_dispensado" {% if search_status == 'ret_fed_nao_dispensado' %}selected{% endif %}>Não Dispensado</option>
                                 </optgroup>
@@ -117,12 +117,49 @@
                     <button type="submit" class="btn btn-secondary w-100">Pesquisar</button>
                 </form>
 
+                <!-- Área de Resultados da Pesquisa com Gráfico -->
+                {% if periodo_pesquisado %}
+                <hr class="my-4">
+                <h5 class="mb-3">Visão Geral de {{ periodo_pesquisado.split('-')[1] }}/{{ periodo_pesquisado.split('-')[0] }}</h5>
+                <div class="row align-items-center">
+                    <!-- Coluna do Gráfico -->
+                    <div class="col-md-4">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                    <!-- Coluna das Listas Lado a Lado -->
+                    <div class="col-md-8">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><span class="badge bg-warning text-dark me-2">{{ empresas_em_aberto|length }}</span>Em Aberto</h6>
+                                <ul class="list-group list-group-flush">
+                                    {% for empresa in empresas_em_aberto %}
+                                        <li class="list-group-item py-1">{{ empresa }}</li>
+                                    {% else %}
+                                        <li class="list-group-item text-body-secondary py-1">Nenhuma empresa pendente.</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><span class="badge bg-success me-2">{{ empresas_finalizadas|length }}</span>Finalizadas</h6>
+                                <ul class="list-group list-group-flush">
+                                    {% for empresa in empresas_finalizadas %}
+                                        <li class="list-group-item py-1">{{ empresa }}</li>
+                                    {% else %}
+                                        <li class="list-group-item text-body-secondary py-1">Nenhuma empresa finalizada.</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Área de Resultados do Filtro Avançado -->
                 {% if empresas_resultado is not none %}
                 <hr class="my-4">
-                <h5 class="mb-3">Resultados para {{ periodo_pesquisado.split('-')[1] }}/{{ periodo_pesquisado.split('-')[0] }}</h5>
                 <h6>
                     <span class="badge bg-info me-2">{{ empresas_resultado|length }}</span>
-                    Empresas com status: <strong>{{ status_pesquisado_label }}</strong>
+                    Resultado do Filtro: <strong>{{ status_pesquisado_label }}</strong>
                 </h6>
                 <ul class="list-group list-group-flush mt-3">
                     {% for empresa in empresas_resultado %}
@@ -137,7 +174,11 @@
     </div>
 </div>
 
+<!-- Inclusão da biblioteca Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
+// Script para abrir/editar dados
 document.getElementById('form-gerenciar').addEventListener('submit', function(event) {
     event.preventDefault();
     const empresa = document.getElementById('empresa_select').value;
@@ -151,6 +192,7 @@ document.getElementById('form-gerenciar').addEventListener('submit', function(ev
     window.location.href = `/selecionar_departamento/${encodeURIComponent(empresa)}/${periodo}`;
 });
 
+// Script para o botão de exportar
 document.getElementById('export-btn').addEventListener('click', function() {
     const mes = document.getElementById('mes_select').value;
     const ano = document.getElementById('ano_select').value;
@@ -158,6 +200,7 @@ document.getElementById('export-btn').addEventListener('click', function() {
     window.location.href = exportUrl;
 });
 
+// Script para máscara de CNPJ
 function mascaraCnpj(input) {
     let value = input.value.replace(/\D/g, '');
     value = value.replace(/^(\d{2})(\d)/, '$1.$2');
@@ -166,5 +209,47 @@ function mascaraCnpj(input) {
     value = value.replace(/(\d{4})(\d)/, '$1-$2');
     input.value = value.slice(0, 18);
 }
+
+// Script para criar o gráfico (só executa se houver resultados)
+{% if periodo_pesquisado and empresas_em_aberto is not none and empresas_finalizadas is not none %}
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    
+    const finalizadasCount = {{ empresas_finalizadas|length }};
+    const emAbertoCount = {{ empresas_em_aberto|length }};
+    const total = finalizadasCount + emAbertoCount;
+
+    if (total > 0) {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: [`Finalizadas (${finalizadasCount})`, `Em Aberto (${emAbertoCount})`],
+                datasets: [{
+                    label: 'Status das Empresas',
+                    data: [finalizadasCount, emAbertoCount],
+                    backgroundColor: ['rgba(25, 135, 84, 0.8)', 'rgba(255, 193, 7, 0.8)'],
+                    borderColor: ['rgba(25, 135, 84, 1)', 'rgba(255, 193, 7, 1)'],
+                    borderWidth: 1,
+                    circumference: 180,
+                    rotation: -90
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Proporção de Status'
+                    }
+                }
+            }
+        });
+    }
+});
+{% endif %}
 </script>
 {% endblock %}

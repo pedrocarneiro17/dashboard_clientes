@@ -1,0 +1,64 @@
+{% extends "layout_no_sidebar.html" %}
+
+{% block title %}Departamento Pessoal - {{ nome_empresa }}{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('selecionar_departamento', nome_empresa=nome_empresa, periodo=periodo) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Voltar para Seleção de Departamento
+    </a>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h3><i class="bi bi-people-fill"></i> Departamento Pessoal: <strong>{{ nome_empresa }}</strong></h3>
+    <span class="badge bg-secondary fs-6">Período: {{ periodo.split('-')[1] }}/{{ periodo.split('-')[0] }}</span>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        {% if dados_dp %}
+            <div class="row">
+                <!-- Coluna de Resumo -->
+                <div class="col-md-5">
+                    <h5 class="card-title mb-3">Resumo da Folha</h5>
+                    <p><strong>Situação dos Colaboradores:</strong><br>{{ dados_dp.SITUACAO_COLABORADORES or 'Não informado' }}</p>
+                    <p><strong>Líquido Empregadores:</strong><br>{{ dados_dp.LIQUIDO_EMPREGADORES or 'Não informado' }}</p>
+                    <p><strong>Líquido Autônomos:</strong><br>{{ dados_dp.LIQUIDO_AUTONOMOS or 'Não informado' }}</p>
+                    <p><strong>Valor GPS:</strong><br>{{ dados_dp.VALOR_GPS or 'Não informado' }}</p>
+                    <p><strong>Valor GFD Mensal:</strong><br>{{ dados_dp.VALOR_GFD_MENSAL or 'Não informado' }}</p>
+                    <p><strong>Valor GFD Rescisória:</strong><br>{{ dados_dp.VALOR_GFD_RESCISORIA or 'Não informado' }}</p>
+                </div>
+                <!-- Coluna de Colaboradores -->
+                <div class="col-md-7">
+                    <h5 class="card-title mb-3">Colaboradores (sem Pró-Labore)</h5>
+                    {% if dados_dp.COLABORADORES %}
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Admissão</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for col in dados_dp.COLABORADORES %}
+                                <tr>
+                                    <td>{{ col.nome }}</td>
+                                    <td>{{ col.admissao }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p class="text-body-secondary">Nenhum colaborador (sem pró-labore) encontrado no documento.</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center p-4">
+                <h5 class="text-body-secondary">Nenhum dado do Departamento Pessoal foi enviado para este período.</h5>
+                <p>Você pode enviar os arquivos PDF através do menu "Enviar Dep. Pessoal".</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -6,6 +6,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import io
 from openpyxl import Workbook
 from io import BytesIO
+import pdfplumber
+import re
 
 # --- Configuração da Aplicação Flask ---
 app = Flask(__name__)
@@ -16,7 +18,7 @@ NOME_ARQUIVO_DADOS = 'dados_empresas.json'
 USUARIO_PADRAO = 'admin'
 SENHA_PADRAO = 'contajur2025'
 
-# --- Listas de Campos ATUALIZADAS ---
+# --- Listas de Campos ---
 CAMPOS_FATURAMENTO = [
     "Serviços tributados", "Serviços retidos", "Venda (indústria/imóveis)",
     "Revenda mercadorias tributárias", "Revenda mercadorias não tributárias",
@@ -30,6 +32,64 @@ CAMPOS_IMPOSTOS_FEDERAL = ["Simples", "PIS", "COFINS", "IRPJ", "CSLL", "IOF", "I
 CAMPOS_IMPOSTOS_ESTADUAL = ["ICMS próprio", "ICMS ST próprio", "DIFAL", "Antecipação", "ICMS ST Entradas", "FEM"]
 CAMPOS_IMPOSTOS_MUNICIPAL = ["ISSQN a pagar", "ISSQN Retido (NF própria)"]
 CAMPOS_RETENCOES_FEDERAL = ["CSRF (Retido)", "IRRF (Retido)", "INSS (Retido)", "ISSQN (Retido)"]
+
+# --- FUNÇÃO DE EXTRAÇÃO DE PDF (ADAPTADA) ---
+def extrair_dados_pdf(pdf_file_stream):
+    texto_completo = ""
+    try:
+        with pdfplumber.open(pdf_file_stream) as pdf:
+            for pagina in pdf.pages:
+                texto_da_pagina = pagina.extract_text(x_tolerance=2, y_tolerance=2)
+                if texto_da_pagina:
+                    texto_completo += texto_da_pagina + "\n"
+    except Exception as e:
+        return {"erro": f"Não foi possível ler o arquivo PDF: {e}"}
+
+    dados = {
+        "CNPJ": None, "SITUACAO_COLABORADORES": None, "COLABORADORES": [],
+        "LIQUIDO_EMPREGADORES": None, "LIQUIDO_AUTONOMOS": None, "VALOR_GPS": None,
+        "VALOR_GFD_MENSAL": None, "VALOR_GFD_RESCISORIA": None
+    }
+    
+    linhas = texto_completo.split('\n')
+    for i, linha in enumerate(linhas):
+        if "Admissão em" in linha:
+            partes = linha.split("Admissão em")
+            nome_limpo = re.sub(r'^\d+\s+', '', partes[0]).strip()
+            nome_limpo = re.sub(r'\s+[\d\s]+$', '', nome_limpo).strip()
+            match_data = re.search(r'(\d{2}/\d{2}/\d{4})', partes[1])
+            if nome_limpo and match_data:
+                data_admissao = match_data.group(1)
+                proxima_linha = linhas[i + 1] if i + 1 < len(linhas) else ""
+                if len(proxima_linha.strip().split()) <= 3 and proxima_linha and "Pró-Labore" not in proxima_linha:
+                    nome_limpo = f"{nome_limpo} {proxima_linha.strip()}"
+                    limite_contexto = min(i + 12, len(linhas))
+                    contexto_seguinte = "\n".join(linhas[i + 2:limite_contexto])
+                else:
+                    limite_contexto = min(i + 11, len(linhas))
+                    contexto_seguinte = "\n".join(linhas[i + 1:limite_contexto])
+                if "Pró-Labore" not in contexto_seguinte:
+                    dados["COLABORADORES"].append({"nome": nome_limpo, "admissao": data_admissao})
+
+    match_cnpj = re.search(r"CNPJ:(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})", texto_completo)
+    if match_cnpj: dados["CNPJ"] = match_cnpj.group(1).strip()
+    
+    match_situacao = re.search(r"Ativos: \d+.*(?:Doença|Outras sit\.): \d+", texto_completo)
+    if match_situacao: dados["SITUACAO_COLABORADORES"] = match_situacao.group(0).strip()
+
+    match_liquido = re.search(r"^L[íi]quido\s+[\d\.,]+\s+([\d\.,]+)\s+([\d\.,]+)", texto_completo, re.MULTILINE | re.IGNORECASE)
+    if match_liquido:
+        dados["LIQUIDO_EMPREGADORES"] = match_liquido.group(1).strip()
+        dados["LIQUIDO_AUTONOMOS"] = match_liquido.group(2).strip()
+
+    impostos_encontrados = {}
+    for match in re.finditer(r"^(GPS|GFD Mensal|GFD Rescisória)\s+R\$\s+([\d\.,]+)", texto_completo, re.MULTILINE):
+        impostos_encontrados[match.group(1).strip()] = f"R$ {match.group(2).strip()}"
+    dados["VALOR_GPS"] = impostos_encontrados.get("GPS", "Não encontrado")
+    dados["VALOR_GFD_MENSAL"] = impostos_encontrados.get("GFD Mensal", "Não encontrado")
+    dados["VALOR_GFD_RESCISORIA"] = impostos_encontrados.get("GFD Rescisória", "Não encontrado")
+    
+    return dados
 
 # --- Funções Auxiliares de Dados ---
 def carregar_dados():
@@ -83,20 +143,22 @@ def index():
     empresas_ativas = {nome: detalhes for nome, detalhes in dados.items() if detalhes.get('active', True)}
     empresas_ordenadas = dict(sorted(empresas_ativas.items()))
     
-    search_ano = request.args.get('search_ano')
-    search_mes = request.args.get('search_mes')
+    now = datetime.now()
+    # Pega os parâmetros da URL ou usa o mês/ano atual como padrão
+    search_ano = request.args.get('search_ano', str(now.year))
+    search_mes = request.args.get('search_mes', f"{now.month:02d}")
     search_status = request.args.get('search_status')
     
     empresas_resultado = None
-    periodo_pesquisado = None
     status_pesquisado_label = None
+    
+    periodo_pesquisado = f"{search_ano}-{search_mes}"
+    empresas_em_aberto = []
+    empresas_finalizadas = []
 
-    if search_ano and search_mes and search_status:
-        periodo_pesquisado = f"{search_ano}-{search_mes}"
+    if search_status:
         empresas_resultado = []
-        
         status_labels = {
-            "em_aberto": "Em Aberto", "finalizado": "Finalizado",
             "fat_lancado": "Faturamento Lançado", "fat_nao_lancado": "Faturamento Não Lançado",
             "fat_concluido": "Faturamento Concluído", "fat_nao_concluido": "Faturamento Não Concluído",
             "imp_fed_lancado": "Impostos Federais Lançado", "imp_fed_nao_lancado": "Impostos Federais Não Lançado",
@@ -107,44 +169,39 @@ def index():
             "imp_mun_concluido": "Impostos Municipais Concluído", "imp_mun_nao_concluido": "Impostos Municipais Não Concluído",
             "ret_fed_lancado": "Retenções Federais Lançado", "ret_fed_nao_lancado": "Retenções Federais Não Lançado",
             "ret_fed_concluido": "Retenções Federais Concluído", "ret_fed_nao_concluido": "Retenções Federais Não Concluído",
-            "ret_fed_sem_notas": "Retenções Federais Sem Notas", "ret_fed_com_notas": "Retenções Federais Com Notas",
+            "ret_fed_sem_notas": "Retenções Federais Sem Notas", "ret_fed_nao_sem_notas": "Retenções Federais Com Notas",
             "ret_fed_dispensado": "Retenções Federais Dispensado", "ret_fed_nao_dispensado": "Retenções Federais Não Dispensado"
         }
         status_pesquisado_label = status_labels.get(search_status, "")
 
-        for nome, detalhes in empresas_ordenadas.items():
-            dados_periodo = detalhes.get('periodos', {}).get(periodo_pesquisado, {})
-            match = False
-            
-            # Mapeamento de chaves para simplificar
-            key_map = {
-                'fat': 'faturamento', 'imp_fed': 'impostos_federal',
-                'imp_est': 'impostos_estadual', 'imp_mun': 'impostos_municipal',
-                'ret_fed': 'retencoes_federal'
-            }
+    for nome, detalhes in empresas_ordenadas.items():
+        dados_periodo = detalhes.get('periodos', {}).get(periodo_pesquisado, {})
+        
+        if dados_periodo.get('status') == 'Finalizado':
+            empresas_finalizadas.append(nome)
+        else:
+            empresas_em_aberto.append(nome)
 
-            if search_status == 'finalizado':
-                if dados_periodo.get('status') == 'Finalizado': match = True
-            elif search_status == 'em_aberto':
-                if dados_periodo.get('status', 'Em Aberto') == 'Em Aberto': match = True
-            else:
-                parts = search_status.split('_')
-                if len(parts) >= 3:
-                    prefix = "_".join(parts[:-1])
-                    check_type = parts[-1]
-                    
-                    category_key = key_map.get(prefix)
-                    if category_key:
-                        is_checked = dados_periodo.get(category_key, {}).get(check_type, False)
-                        if "nao" in search_status:
-                            if not is_checked: match = True
-                        else:
-                            if is_checked: match = True
-            
+        if search_status:
+            match = False
+            key_map = { 'fat': 'faturamento', 'imp_fed': 'impostos_federal', 'imp_est': 'impostos_estadual', 'imp_mun': 'impostos_municipal', 'ret_fed': 'retencoes_federal' }
+            parts = search_status.split('_')
+            if len(parts) >= 2:
+                check_type = parts[-1]
+                prefix_parts = parts[:-1]
+                is_negative = "nao" in prefix_parts
+                if is_negative: prefix_parts.remove("nao")
+                prefix = "_".join(prefix_parts)
+                category_key = key_map.get(prefix)
+                if category_key:
+                    is_checked = dados_periodo.get(category_key, {}).get(check_type, False)
+                    if is_negative:
+                        if not is_checked: match = True
+                    else:
+                        if is_checked: match = True
             if match:
                 empresas_resultado.append(nome)
 
-    now = datetime.now()
     meses = [f"{i:02d}" for i in range(1, 13)]
     anos = [str(i) for i in range(2010, now.year + 6)]
     
@@ -152,6 +209,8 @@ def index():
                            empresas=empresas_ordenadas, meses=meses, anos=anos, 
                            ano_atual=str(now.year), mes_atual=f"{now.month:02d}",
                            empresas_resultado=empresas_resultado,
+                           empresas_em_aberto=empresas_em_aberto,
+                           empresas_finalizadas=empresas_finalizadas,
                            periodo_pesquisado=periodo_pesquisado,
                            search_ano=search_ano, search_mes=search_mes,
                            search_status=search_status,
@@ -244,7 +303,6 @@ def dados_empresa(nome_empresa, periodo):
         dados_periodo['impostos_municipal'] = {campo: para_float(request.form.get(campo)) for campo in CAMPOS_IMPOSTOS_MUNICIPAL}
         dados_periodo['retencoes_federal'] = {campo: para_float(request.form.get(campo)) for campo in CAMPOS_RETENCOES_FEDERAL}
         
-        # Salva o estado de todos os checkboxes
         dados_periodo['faturamento']['lancado'] = 'fat_lancado' in request.form
         dados_periodo['faturamento']['concluido'] = 'fat_concluido' in request.form
         dados_periodo['impostos_federal']['lancado'] = 'imp_fed_lancado' in request.form
@@ -341,6 +399,72 @@ def reopen_month(nome_empresa, periodo):
     else:
         flash('Erro ao reabrir o mês.', 'danger')
     return redirect(url_for('dados_empresa', nome_empresa=nome_empresa, periodo=periodo))
+
+@app.route('/upload_dp_page')
+@login_required
+def upload_dp_page():
+    now = datetime.now()
+    meses = [f"{i:02d}" for i in range(1, 13)]
+    anos = [str(i) for i in range(2010, now.year + 6)]
+    return render_template('upload_dp.html', meses=meses, anos=anos, ano_atual=str(now.year), mes_atual=f"{now.month:02d}")
+
+@app.route('/upload_dp', methods=['POST'])
+@login_required
+def upload_dp():
+    ano = request.form.get('ano')
+    mes = request.form.get('mes')
+    pdf_files = request.files.getlist('pdf_files')
+    
+    if not ano or not mes or not pdf_files or pdf_files[0].filename == '':
+        flash('Por favor, selecione o período e pelo menos um arquivo PDF.', 'danger')
+        return redirect(url_for('upload_dp_page'))
+
+    periodo = f"{ano}-{mes}"
+    dados = carregar_dados()
+    cnpj_map = {detalhes.get('cnpj'): nome for nome, detalhes in dados.items() if detalhes.get('cnpj')}
+    
+    sucesso_count = 0
+    falha_cnpj = []
+    falha_leitura = []
+
+    for file in pdf_files:
+        if file.filename == '': continue
+        try:
+            dados_extraidos = extrair_dados_pdf(file.stream)
+            if "erro" in dados_extraidos:
+                falha_leitura.append(file.filename)
+                continue
+
+            cnpj_extraido = dados_extraidos.get("CNPJ")
+            if cnpj_extraido and cnpj_extraido in cnpj_map:
+                nome_empresa = cnpj_map[cnpj_extraido]
+                if 'periodos' not in dados[nome_empresa]: dados[nome_empresa]['periodos'] = {}
+                if periodo not in dados[nome_empresa]['periodos']: dados[nome_empresa]['periodos'][periodo] = {}
+                
+                dados[nome_empresa]['periodos'][periodo]['departamento_pessoal'] = dados_extraidos
+                sucesso_count += 1
+            else:
+                falha_cnpj.append(file.filename)
+        except Exception:
+            falha_leitura.append(file.filename)
+
+    salvar_dados(dados)
+    
+    if sucesso_count > 0:
+        flash(f'{sucesso_count} arquivos processados e salvos com sucesso!', 'success')
+    if falha_cnpj:
+        flash(f'Falha ao encontrar o CNPJ no sistema para os arquivos: {", ".join(falha_cnpj)}', 'warning')
+    if falha_leitura:
+        flash(f'Falha ao ler os seguintes arquivos PDF: {", ".join(falha_leitura)}', 'danger')
+
+    return redirect(url_for('upload_dp_page'))
+
+@app.route('/dados_dp/<path:nome_empresa>/<periodo>')
+@login_required
+def dados_dp(nome_empresa, periodo):
+    dados = carregar_dados()
+    dados_dp = dados.get(nome_empresa, {}).get('periodos', {}).get(periodo, {}).get('departamento_pessoal')
+    return render_template('dados_dp.html', nome_empresa=nome_empresa, periodo=periodo, dados_dp=dados_dp)
 
 @app.route('/export_xlsx')
 @login_required
