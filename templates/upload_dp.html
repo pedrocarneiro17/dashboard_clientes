@@ -16,33 +16,15 @@
                 <h5><i class="bi bi-cloud-upload-fill"></i> Enviar Arquivos do Departamento Pessoal</h5>
             </div>
             <div class="card-body">
-                <p>Selecione o período e os arquivos PDF da folha de pagamento. O sistema irá extrair os dados e atribuí-los à empresa correta com base no CNPJ encontrado no documento.</p>
+                <p>Selecione os arquivos PDF da folha de pagamento. O sistema irá extrair o período e os dados, atribuindo-os à empresa correta com base no CNPJ encontrado no documento.</p>
                 <form action="{{ url_for('upload_dp') }}" method="post" enctype="multipart/form-data">
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label for="mes" class="form-label">Mês</label>
-                            <select id="mes" name="mes" class="form-select" required>
-                                {% for mes in meses %}
-                                <option value="{{ mes }}" {% if mes == mes_atual %}selected{% endif %}>{{ mes }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col">
-                            <label for="ano" class="form-label">Ano</label>
-                            <select id="ano" name="ano" class="form-select" required>
-                                {% for ano in anos %}
-                                <option value="{{ ano }}" {% if ano == ano_atual %}selected{% endif %}>{{ ano }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
                     <div class="mb-3">
                         <label for="pdf_files" class="form-label">Arquivos PDF</label>
                         <input class="form-control" type="file" id="pdf_files" name="pdf_files" multiple required accept=".pdf">
-                        <div class="form-text">Você pode selecionar múltiplos arquivos.</div>
+                        <div class="form-text">Você pode selecionar múltiplos arquivos de uma vez.</div>
                     </div>
                     <button class="btn btn-primary w-100 mt-3" type="submit">
-                        Enviar e Processar
+                        <i class="bi bi-send-check"></i> Enviar e Processar
                     </button>
                 </form>
             </div>

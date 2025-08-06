@@ -46,11 +46,19 @@ def extrair_dados_pdf(pdf_file_stream):
         return {"erro": f"Não foi possível ler o arquivo PDF: {e}"}
 
     dados = {
-        "CNPJ": None, "SITUACAO_COLABORADORES": None, "COLABORADORES": [],
-        "LIQUIDO_EMPREGADORES": None, "LIQUIDO_AUTONOMOS": None, "VALOR_GPS": None,
+        "CNPJ": None, "PERIODO": None, "SITUACAO_COLABORADORES": None, "COLABORADORES": [],
+        "LIQUIDO_COLABORADORES": None, "LIQUIDO_EMPREGADORES": None, "VALOR_GPS": None,
         "VALOR_GFD_MENSAL": None, "VALOR_GFD_RESCISORIA": None
     }
     
+    mapa_meses = {"JANEIRO": "01", "FEVEREIRO": "02", "MARÇO": "03", "ABRIL": "04", "MAIO": "05", "JUNHO": "06", "JULHO": "07", "AGOSTO": "08", "SETEMBRO": "09", "OUTUBRO": "10", "NOVEMBRO": "11", "DEZEMBRO": "12"}
+    match_periodo = re.search(r"referente ao mês de (\w+)/(\d{4})", texto_completo, re.IGNORECASE)
+    if match_periodo:
+        mes_nome = match_periodo.group(1).upper()
+        ano = match_periodo.group(2)
+        mes_num = mapa_meses.get(mes_nome)
+        if mes_num: dados["PERIODO"] = f"{ano}-{mes_num}"
+
     linhas = texto_completo.split('\n')
     for i, linha in enumerate(linhas):
         if "Admissão em" in linha:
@@ -63,24 +71,21 @@ def extrair_dados_pdf(pdf_file_stream):
                 proxima_linha = linhas[i + 1] if i + 1 < len(linhas) else ""
                 if len(proxima_linha.strip().split()) <= 3 and proxima_linha and "Pró-Labore" not in proxima_linha:
                     nome_limpo = f"{nome_limpo} {proxima_linha.strip()}"
-                    limite_contexto = min(i + 12, len(linhas))
-                    contexto_seguinte = "\n".join(linhas[i + 2:limite_contexto])
+                    contexto_seguinte = "\n".join(linhas[i + 2:min(i + 12, len(linhas))])
                 else:
-                    limite_contexto = min(i + 11, len(linhas))
-                    contexto_seguinte = "\n".join(linhas[i + 1:limite_contexto])
+                    contexto_seguinte = "\n".join(linhas[i + 1:min(i + 11, len(linhas))])
                 if "Pró-Labore" not in contexto_seguinte:
                     dados["COLABORADORES"].append({"nome": nome_limpo, "admissao": data_admissao})
 
     match_cnpj = re.search(r"CNPJ:(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})", texto_completo)
     if match_cnpj: dados["CNPJ"] = match_cnpj.group(1).strip()
-    
     match_situacao = re.search(r"Ativos: \d+.*(?:Doença|Outras sit\.): \d+", texto_completo)
     if match_situacao: dados["SITUACAO_COLABORADORES"] = match_situacao.group(0).strip()
-
+    
     match_liquido = re.search(r"^L[íi]quido\s+[\d\.,]+\s+([\d\.,]+)\s+([\d\.,]+)", texto_completo, re.MULTILINE | re.IGNORECASE)
     if match_liquido:
-        dados["LIQUIDO_EMPREGADORES"] = match_liquido.group(1).strip()
-        dados["LIQUIDO_AUTONOMOS"] = match_liquido.group(2).strip()
+        dados["LIQUIDO_COLABORADORES"] = match_liquido.group(1).strip()
+        dados["LIQUIDO_EMPREGADORES"] = match_liquido.group(2).strip()
 
     impostos_encontrados = {}
     for match in re.finditer(r"^(GPS|GFD Mensal|GFD Rescisória)\s+R\$\s+([\d\.,]+)", texto_completo, re.MULTILINE):
@@ -144,21 +149,37 @@ def index():
     empresas_ordenadas = dict(sorted(empresas_ativas.items()))
     
     now = datetime.now()
-    # Pega os parâmetros da URL ou usa o mês/ano atual como padrão
     search_ano = request.args.get('search_ano', str(now.year))
     search_mes = request.args.get('search_mes', f"{now.month:02d}")
+    # LINHA ADICIONADA: Lê o valor do filtro da URL
     search_status = request.args.get('search_status')
     
-    empresas_resultado = None
-    status_pesquisado_label = None
-    
     periodo_pesquisado = f"{search_ano}-{search_mes}"
-    empresas_em_aberto = []
-    empresas_finalizadas = []
+    
+    empresas_fiscal_em_aberto = []
+    empresas_fiscal_finalizadas = []
+    empresas_dp_em_aberto = []
+    empresas_dp_finalizadas = []
+    empresas_resultado_filtro = None
+    status_pesquisado_label = None
 
+    for nome, detalhes in empresas_ordenadas.items():
+        dados_periodo = detalhes.get('periodos', {}).get(periodo_pesquisado, {})
+        if dados_periodo.get('status') == 'Finalizado':
+            empresas_fiscal_finalizadas.append(nome)
+        else:
+            empresas_fiscal_em_aberto.append(nome)
+        if dados_periodo.get('dp_status') == 'Finalizado':
+            empresas_dp_finalizadas.append(nome)
+        else:
+            empresas_dp_em_aberto.append(nome)
+
+    # BLOCO ADICIONADO: Processa o filtro avançado se ele existir
     if search_status:
-        empresas_resultado = []
+        empresas_resultado_filtro = []
         status_labels = {
+            "fiscal_em_aberto": "Fiscal - Em Aberto", "fiscal_finalizado": "Fiscal - Finalizado",
+            "dp_em_aberto": "Dep. Pessoal - Em Aberto", "dp_finalizado": "Dep. Pessoal - Finalizado",
             "fat_lancado": "Faturamento Lançado", "fat_nao_lancado": "Faturamento Não Lançado",
             "fat_concluido": "Faturamento Concluído", "fat_nao_concluido": "Faturamento Não Concluído",
             "imp_fed_lancado": "Impostos Federais Lançado", "imp_fed_nao_lancado": "Impostos Federais Não Lançado",
@@ -174,47 +195,49 @@ def index():
         }
         status_pesquisado_label = status_labels.get(search_status, "")
 
-    for nome, detalhes in empresas_ordenadas.items():
-        dados_periodo = detalhes.get('periodos', {}).get(periodo_pesquisado, {})
-        
-        if dados_periodo.get('status') == 'Finalizado':
-            empresas_finalizadas.append(nome)
+        if search_status == 'fiscal_em_aberto': empresas_resultado_filtro = empresas_fiscal_em_aberto
+        elif search_status == 'fiscal_finalizado': empresas_resultado_filtro = empresas_fiscal_finalizadas
+        elif search_status == 'dp_em_aberto': empresas_resultado_filtro = empresas_dp_em_aberto
+        elif search_status == 'dp_finalizado': empresas_resultado_filtro = empresas_dp_finalizadas
         else:
-            empresas_em_aberto.append(nome)
-
-        if search_status:
-            match = False
-            key_map = { 'fat': 'faturamento', 'imp_fed': 'impostos_federal', 'imp_est': 'impostos_estadual', 'imp_mun': 'impostos_municipal', 'ret_fed': 'retencoes_federal' }
-            parts = search_status.split('_')
-            if len(parts) >= 2:
-                check_type = parts[-1]
-                prefix_parts = parts[:-1]
-                is_negative = "nao" in prefix_parts
-                if is_negative: prefix_parts.remove("nao")
-                prefix = "_".join(prefix_parts)
-                category_key = key_map.get(prefix)
-                if category_key:
-                    is_checked = dados_periodo.get(category_key, {}).get(check_type, False)
-                    if is_negative:
-                        if not is_checked: match = True
-                    else:
-                        if is_checked: match = True
-            if match:
-                empresas_resultado.append(nome)
+            for nome, detalhes in empresas_ordenadas.items():
+                dados_periodo = detalhes.get('periodos', {}).get(periodo_pesquisado, {})
+                match = False
+                key_map = { 'fat': 'faturamento', 'imp_fed': 'impostos_federal', 'imp_est': 'impostos_estadual', 'imp_mun': 'impostos_municipal', 'ret_fed': 'retencoes_federal' }
+                parts = search_status.split('_')
+                if len(parts) >= 2:
+                    check_type = parts[-1]
+                    prefix_parts = parts[:-1]
+                    is_negative = "nao" in prefix_parts
+                    if is_negative: prefix_parts.remove("nao")
+                    prefix = "_".join(prefix_parts)
+                    category_key = key_map.get(prefix)
+                    if category_key:
+                        is_checked = dados_periodo.get(category_key, {}).get(check_type, False)
+                        if is_negative:
+                            if not is_checked: match = True
+                        else:
+                            if is_checked: match = True
+                if match:
+                    empresas_resultado_filtro.append(nome)
 
     meses = [f"{i:02d}" for i in range(1, 13)]
     anos = [str(i) for i in range(2010, now.year + 6)]
     
+    # RENDER_TEMPLATE ATUALIZADO para incluir as variáveis do filtro
     return render_template('index.html', 
                            empresas=empresas_ordenadas, meses=meses, anos=anos, 
                            ano_atual=str(now.year), mes_atual=f"{now.month:02d}",
-                           empresas_resultado=empresas_resultado,
-                           empresas_em_aberto=empresas_em_aberto,
-                           empresas_finalizadas=empresas_finalizadas,
+                           empresas_resultado_filtro=empresas_resultado_filtro,
+                           empresas_fiscal_em_aberto=empresas_fiscal_em_aberto,
+                           empresas_fiscal_finalizadas=empresas_fiscal_finalizadas,
+                           empresas_dp_em_aberto=empresas_dp_em_aberto,
+                           empresas_dp_finalizadas=empresas_dp_finalizadas,
                            periodo_pesquisado=periodo_pesquisado,
                            search_ano=search_ano, search_mes=search_mes,
-                           search_status=search_status,
-                           status_pesquisado_label=status_pesquisado_label)
+                           search_status=search_status, 
+                           filtro_label=status_pesquisado_label)
+
 
 @app.route('/add_company_page')
 @login_required
@@ -281,7 +304,35 @@ def update_company(nome_empresa):
 @app.route('/selecionar_departamento/<path:nome_empresa>/<periodo>')
 @login_required
 def selecionar_departamento(nome_empresa, periodo):
-    return render_template('selecionar_departamento.html', nome_empresa=nome_empresa, periodo=periodo)
+    dados = carregar_dados()
+    return render_template('selecionar_departamento.html', nome_empresa=nome_empresa, periodo=periodo, dados=dados)
+
+# --- FUNÇÃO AUXILIAR E ROTAS DO DASHBOARD ADICIONADAS ---
+def get_dashboard_data(nome_empresa, periodo):
+    dados = carregar_dados()
+    dados_empresa_especifica = dados.get(nome_empresa, {})
+    dados_periodo = dados_empresa_especifica.get('periodos', {}).get(periodo, {})
+    
+    def prepare_chart_data(data_dict):
+        chart_data = {k: v for k, v in data_dict.items() if isinstance(v, (int, float)) and v > 0}
+        return { "labels": list(chart_data.keys()), "data": list(chart_data.values()) }
+
+    return {
+        'nome_empresa': nome_empresa, 'periodo': periodo,
+        'dados_empresa': dados_empresa_especifica,
+        'chart_faturamento': prepare_chart_data(dados_periodo.get('faturamento', {})),
+        'chart_despesas': prepare_chart_data(dados_periodo.get('despesas', {})),
+        'chart_imp_federal': prepare_chart_data(dados_periodo.get('impostos_federal', {})),
+        'chart_imp_estadual': prepare_chart_data(dados_periodo.get('impostos_estadual', {})),
+        'chart_imp_municipal': prepare_chart_data(dados_periodo.get('impostos_municipal', {})),
+        'chart_ret_federal': prepare_chart_data(dados_periodo.get('retencoes_federal', {}))
+    }
+
+@app.route('/dashboard_fiscal/<path:nome_empresa>/<periodo>')
+@login_required
+def dashboard_fiscal(nome_empresa, periodo):
+    context = get_dashboard_data(nome_empresa, periodo)
+    return render_template('dashboard_fiscal.html', **context)
 
 @app.route('/dados/<path:nome_empresa>/<periodo>', methods=['GET', 'POST'])
 @login_required
@@ -403,29 +454,23 @@ def reopen_month(nome_empresa, periodo):
 @app.route('/upload_dp_page')
 @login_required
 def upload_dp_page():
-    now = datetime.now()
-    meses = [f"{i:02d}" for i in range(1, 13)]
-    anos = [str(i) for i in range(2010, now.year + 6)]
-    return render_template('upload_dp.html', meses=meses, anos=anos, ano_atual=str(now.year), mes_atual=f"{now.month:02d}")
+    return render_template('upload_dp.html')
 
 @app.route('/upload_dp', methods=['POST'])
 @login_required
 def upload_dp():
-    ano = request.form.get('ano')
-    mes = request.form.get('mes')
     pdf_files = request.files.getlist('pdf_files')
-    
-    if not ano or not mes or not pdf_files or pdf_files[0].filename == '':
-        flash('Por favor, selecione o período e pelo menos um arquivo PDF.', 'danger')
+    if not pdf_files or pdf_files[0].filename == '':
+        flash('Por favor, selecione pelo menos um arquivo PDF.', 'danger')
         return redirect(url_for('upload_dp_page'))
 
-    periodo = f"{ano}-{mes}"
-    dados = carregar_dados()
-    cnpj_map = {detalhes.get('cnpj'): nome for nome, detalhes in dados.items() if detalhes.get('cnpj')}
+    dados_gerais = carregar_dados()
+    cnpj_map = {detalhes.get('cnpj'): nome for nome, detalhes in dados_gerais.items() if detalhes.get('cnpj')}
     
     sucesso_count = 0
     falha_cnpj = []
     falha_leitura = []
+    falha_periodo = []
 
     for file in pdf_files:
         if file.filename == '': continue
@@ -436,26 +481,30 @@ def upload_dp():
                 continue
 
             cnpj_extraido = dados_extraidos.get("CNPJ")
+            periodo_extraido = dados_extraidos.get("PERIODO")
+
+            if not periodo_extraido:
+                falha_periodo.append(file.filename)
+                continue
+            
             if cnpj_extraido and cnpj_extraido in cnpj_map:
                 nome_empresa = cnpj_map[cnpj_extraido]
-                if 'periodos' not in dados[nome_empresa]: dados[nome_empresa]['periodos'] = {}
-                if periodo not in dados[nome_empresa]['periodos']: dados[nome_empresa]['periodos'][periodo] = {}
+                if 'periodos' not in dados_gerais[nome_empresa]: dados_gerais[nome_empresa]['periodos'] = {}
+                if periodo_extraido not in dados_gerais[nome_empresa]['periodos']: dados_gerais[nome_empresa]['periodos'][periodo_extraido] = {}
                 
-                dados[nome_empresa]['periodos'][periodo]['departamento_pessoal'] = dados_extraidos
+                dados_gerais[nome_empresa]['periodos'][periodo_extraido]['departamento_pessoal'] = dados_extraidos
                 sucesso_count += 1
             else:
                 falha_cnpj.append(file.filename)
         except Exception:
             falha_leitura.append(file.filename)
 
-    salvar_dados(dados)
+    salvar_dados(dados_gerais)
     
-    if sucesso_count > 0:
-        flash(f'{sucesso_count} arquivos processados e salvos com sucesso!', 'success')
-    if falha_cnpj:
-        flash(f'Falha ao encontrar o CNPJ no sistema para os arquivos: {", ".join(falha_cnpj)}', 'warning')
-    if falha_leitura:
-        flash(f'Falha ao ler os seguintes arquivos PDF: {", ".join(falha_leitura)}', 'danger')
+    if sucesso_count > 0: flash(f'{sucesso_count} arquivos processados e salvos com sucesso!', 'success')
+    if falha_cnpj: flash(f'Falha ao encontrar o CNPJ no sistema para os arquivos: {", ".join(falha_cnpj)}', 'warning')
+    if falha_periodo: flash(f'Não foi possível identificar o período nos arquivos: {", ".join(falha_periodo)}', 'warning')
+    if falha_leitura: flash(f'Falha ao ler os seguintes arquivos PDF: {", ".join(falha_leitura)}', 'danger')
 
     return redirect(url_for('upload_dp_page'))
 
@@ -463,8 +512,34 @@ def upload_dp():
 @login_required
 def dados_dp(nome_empresa, periodo):
     dados = carregar_dados()
-    dados_dp = dados.get(nome_empresa, {}).get('periodos', {}).get(periodo, {}).get('departamento_pessoal')
-    return render_template('dados_dp.html', nome_empresa=nome_empresa, periodo=periodo, dados_dp=dados_dp)
+    dados_periodo = dados.get(nome_empresa, {}).get('periodos', {}).get(periodo, {})
+    dados_dp = dados_periodo.get('departamento_pessoal')
+    status_dp = dados_periodo.get('dp_status', 'Em Aberto')
+    return render_template('dados_dp.html', nome_empresa=nome_empresa, periodo=periodo, dados_dp=dados_dp, status_dp=status_dp)
+
+@app.route('/finalize_dp_month/<path:nome_empresa>/<periodo>', methods=['POST'])
+@login_required
+def finalize_dp_month(nome_empresa, periodo):
+    dados = carregar_dados()
+    if nome_empresa in dados and periodo in dados[nome_empresa].get('periodos', {}):
+        dados[nome_empresa]['periodos'][periodo]['dp_status'] = 'Finalizado'
+        salvar_dados(dados)
+        flash('Mês do Departamento Pessoal finalizado com sucesso!', 'success')
+    else:
+        flash('Erro ao finalizar o mês.', 'danger')
+    return redirect(url_for('dados_dp', nome_empresa=nome_empresa, periodo=periodo))
+
+@app.route('/reopen_dp_month/<path:nome_empresa>/<periodo>', methods=['POST'])
+@login_required
+def reopen_dp_month(nome_empresa, periodo):
+    dados = carregar_dados()
+    if nome_empresa in dados and periodo in dados[nome_empresa].get('periodos', {}):
+        dados[nome_empresa]['periodos'][periodo]['dp_status'] = 'Em Aberto'
+        salvar_dados(dados)
+        flash('Mês do Departamento Pessoal reaberto para edição!', 'info')
+    else:
+        flash('Erro ao reabrir o mês.', 'danger')
+    return redirect(url_for('dados_dp', nome_empresa=nome_empresa, periodo=periodo))
 
 @app.route('/export_xlsx')
 @login_required
@@ -526,8 +601,8 @@ def export_xlsx():
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)
-    return Response(buffer, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers={"Content-Disposition": f"attachment;filename={filename}"})
+    return Response(buffer, mimetype='application/vnd.openxmlformats-officedocument.sheet', headers={"Content-Disposition": f"attachment;filename={filename}"})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)

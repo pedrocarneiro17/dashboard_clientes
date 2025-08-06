@@ -20,14 +20,21 @@
                     <strong>Empresa:</strong> {{ nome_empresa }}<br>
                     <strong>Período:</strong> {{ periodo.split('-')[1] }}/{{ periodo.split('-')[0] }}
                 </p>
-                <p>Para qual departamento você deseja visualizar ou lançar os dados?</p>
+                <p>O que você deseja fazer?</p>
                 <div class="d-grid gap-2">
-                    <a href="{{ url_for('dados_empresa', nome_empresa=nome_empresa, periodo=periodo) }}" class="btn btn-primary btn-lg">
-                        <i class="bi bi-calculator me-2"></i>Fiscal / Contábil
+                    <a href="{{ url_for('dados_empresa', nome_empresa=nome_empresa, periodo=periodo) }}" class="btn btn-primary btn-lg d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-calculator me-2"></i>Lançar Dados (Fiscal)</span>
+                        {% set fiscal_status = dados.get(nome_empresa, {}).get('periodos', {}).get(periodo, {}).get('status', 'Em Aberto') %}
+                        <span class="badge bg-light text-dark">{{ fiscal_status }}</span>
+                    </a>
+                    <a href="{{ url_for('dados_dp', nome_empresa=nome_empresa, periodo=periodo) }}" class="btn btn-info btn-lg d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-people-fill me-2"></i>Ver Dados (Dep. Pessoal)</span>
+                        {% set dp_status = dados.get(nome_empresa, {}).get('periodos', {}).get(periodo, {}).get('dp_status', 'Em Aberto') %}
+                        <span class="badge bg-light text-dark">{{ dp_status }}</span>
                     </a>
                     <!-- BOTÃO ATUALIZADO -->
-                    <a href="{{ url_for('dados_dp', nome_empresa=nome_empresa, periodo=periodo) }}" class="btn btn-info btn-lg">
-                        <i class="bi bi-people-fill me-2"></i>Departamento Pessoal
+                    <a href="{{ url_for('dashboard_fiscal', nome_empresa=nome_empresa, periodo=periodo) }}" class="btn btn-success btn-lg">
+                        <i class="bi bi-pie-chart-fill me-2"></i>Acessar Dashboard Fiscal
                     </a>
                 </div>
             </div>

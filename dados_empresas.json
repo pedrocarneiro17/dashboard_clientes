@@ -105,43 +105,58 @@
             "2025-07": {
                 "faturamento": {
                     "Serviços tributados": 1222.0,
-                    "Serviços retidos": 0.0,
-                    "Venda (indústria)": 0.0,
-                    "Revenda mercadorias tributárias": 0.0,
-                    "Revenda mercadorias não tributárias": 0.0,
-                    "Revenda de mercadoria monofásica": 0.0,
-                    "Locação": 0.0
+                    "Serviços retidos": 121.0,
+                    "Venda (indústria/imóveis)": 23213.0,
+                    "Revenda mercadorias tributárias": 345.0,
+                    "Revenda mercadorias não tributárias": 1230.0,
+                    "Revenda de mercadoria monofásica": 12332.0,
+                    "Locação": 0.0,
+                    "Receita sem nota fiscal": 0.0,
+                    "lancado": false,
+                    "concluido": false
                 },
                 "despesas": {
-                    "Compras para revenda": 0.0,
-                    "Compras para uso/consumo": 0.0,
-                    "Compras para ativo imobilizado": 0.0,
-                    "Serviços tomados com nota fiscal": 0.0
+                    "Compras para revenda": 220.0,
+                    "Compras para uso/consumo": 120.0,
+                    "Compras para ativo imobilizado": 1230.0,
+                    "Serviços tomados com nota fiscal": 3240.0
                 },
                 "impostos_federal": {
-                    "Simples": 0.0,
-                    "PIS": 0.0,
-                    "COFINS": 0.0,
-                    "IRPJ": 0.0,
-                    "CSLL": 0.0
+                    "Simples": 10.0,
+                    "PIS": 20.0,
+                    "COFINS": 50.0,
+                    "IRPJ": 760.0,
+                    "CSLL": 50.0,
+                    "IOF": 0.0,
+                    "IPI": 0.0,
+                    "lancado": false,
+                    "concluido": false
                 },
                 "impostos_estadual": {
-                    "ICMS próprio": 0.0,
+                    "ICMS próprio": 120.0,
                     "ICMS ST próprio": 0.0,
-                    "DIFAL": 0.0,
+                    "DIFAL": 230.0,
                     "Antecipação": 0.0,
                     "ICMS ST Entradas": 0.0,
-                    "FEM": 0.0
+                    "FEM": 0.0,
+                    "lancado": false,
+                    "concluido": false
                 },
                 "impostos_municipal": {
                     "ISSQN a pagar": 0.0,
-                    "ISSQN Retido (NF própria)": 0.0
+                    "ISSQN Retido (NF própria)": 30.0,
+                    "lancado": false,
+                    "concluido": false
                 },
                 "retencoes_federal": {
-                    "CSRF (Retido)": 0.0,
-                    "IRRF (Retido)": 0.0,
-                    "INSS (Retido)": 0.0,
-                    "ISSQN (Retido)": 0.0
+                    "CSRF (Retido)": 70.0,
+                    "IRRF (Retido)": 50.0,
+                    "INSS (Retido)": 430.0,
+                    "ISSQN (Retido)": 0.0,
+                    "lancado": false,
+                    "concluido": false,
+                    "sem_notas": false,
+                    "dispensado": false
                 },
                 "status": "Finalizado"
             }
@@ -265,8 +280,99 @@
                     "VALOR_GPS": "R$ 14.504,70",
                     "VALOR_GFD_MENSAL": "R$ 3.129,30",
                     "VALOR_GFD_RESCISORIA": "R$ 0,00"
-                }
+                },
+                "dp_status": "Finalizado",
+                "status": "Finalizado"
+            },
+            "2025-07": {
+                "departamento_pessoal": {
+                    "CNPJ": "23.833.668/0001-15",
+                    "PERIODO": "2025-07",
+                    "SITUACAO_COLABORADORES": "Ativos: 16 Admitidos: 0 Demitidos: 0 Transferidos: 0 Acidente trabalho: 0 Maternidade: 0 Militar: 0 Doença: 1 Outras sit.: 1",
+                    "COLABORADORES": [
+                        {
+                            "nome": "ANGELICA JUNIA PEREIRA",
+                            "admissao": "01/06/2025"
+                        },
+                        {
+                            "nome": "AUGUSTA IZABEL FONSECA",
+                            "admissao": "13/02/2025"
+                        },
+                        {
+                            "nome": "ELENA DE MATOS ARAUJO",
+                            "admissao": "06/06/2006"
+                        },
+                        {
+                            "nome": "GABRIELA LUANA SILVA MACIEL",
+                            "admissao": "03/04/2025"
+                        },
+                        {
+                            "nome": "GERALDO LINO FERREIRA",
+                            "admissao": "11/05/2011"
+                        },
+                        {
+                            "nome": "GLEIDE RODRIGUES DOS SANTOS",
+                            "admissao": "21/05/2025"
+                        },
+                        {
+                            "nome": "JOSE ROBERTO CORREIA",
+                            "admissao": "01/04/2019"
+                        },
+                        {
+                            "nome": "MARIA DA CONCEICAO SILVA",
+                            "admissao": "09/08/2017"
+                        },
+                        {
+                            "nome": "MARIA J. PEREIRA TEIXEIRA",
+                            "admissao": "07/02/1993"
+                        },
+                        {
+                            "nome": "NATHAN LUCAS SILVA DE FREITAS",
+                            "admissao": "01/10/2024"
+                        },
+                        {
+                            "nome": "RAQUEL SOARES MARTINS",
+                            "admissao": "02/05/2025"
+                        },
+                        {
+                            "nome": "ROBERTO DE PAULA UMBELINO",
+                            "admissao": "01/09/2022"
+                        },
+                        {
+                            "nome": "SERGIO DE OLIVEIRA",
+                            "admissao": "01/03/2013"
+                        },
+                        {
+                            "nome": "SHIRLEY MARIA FERREIRA",
+                            "admissao": "15/09/2006"
+                        },
+                        {
+                            "nome": "VILMA DA SILVA RIBEIRO",
+                            "admissao": "16/04/2025"
+                        }
+                    ],
+                    "LIQUIDO_EMPREGADORES": "34.230,00",
+                    "LIQUIDO_AUTONOMOS": "1.351,00",
+                    "VALOR_GPS": "R$ 14.504,70",
+                    "VALOR_GFD_MENSAL": "R$ 3.129,30",
+                    "VALOR_GFD_RESCISORIA": "R$ 0,00"
+                },
+                "dp_status": "Finalizado"
             }
         }
+    },
+    "ighjkghf": {
+        "cnpj": "11.111.111/1111-11",
+        "envio_imposto": "Gclick",
+        "prazo": "dia 06",
+        "active": true,
+        "periodos": {}
+    },
+    "fdghfdhdf": {
+        "cnpj": "",
+        "envio_imposto": "Gclick",
+        "prazo": "dia 06",
+        "active": true,
+        "periodos": {}
     }
 }
