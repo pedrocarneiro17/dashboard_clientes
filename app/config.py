@@ -11,7 +11,7 @@ SENHA_PADRAO = 'contajur2025'
 # Listas de Campos para os formulários
 CAMPOS_FATURAMENTO = [
     "Serviços tributados", "Serviços retidos", "Venda (indústria/imóveis)",
-    "Revenda mercadorias tributárias", "Revenda mercadorias não tributárias",
+    "Revenda mercadorias tributadas", "Revenda mercadorias não tributadas",
     "Revenda de mercadoria monofásica", "Locação", "Receita sem nota fiscal"
 ]
 CAMPOS_DESPESAS = [

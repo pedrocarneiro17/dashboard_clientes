@@ -4,12 +4,8 @@
 
 {% block content %}
 <div class="mb-3 d-flex justify-content-between align-items-center">
-    <a href="{{ url_for('selecionar_departamento', nome_empresa=nome_empresa, periodo=periodo) }}" class="btn btn-outline-secondary btn-sm">
+    <a href="{{ url_for('fiscal.selecionar_departamento', nome_empresa=nome_empresa, periodo=periodo) }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left"></i> Voltar para Seleção de Departamento
-    </a>
-    <!-- NOVO BOTÃO DASHBOARD -->
-    <a href="{{ url_for('dashboard_fiscal', nome_empresa=nome_empresa, periodo=periodo) }}" class="btn btn-primary btn-sm">
-        <i class="bi bi-pie-chart-fill"></i> Acessar Dashboard Fiscal
     </a>
 </div>
 
@@ -27,37 +23,38 @@
     <div class="card-body">
         {% if dados_dp %}
             <div class="row">
-                <!-- Coluna de Resumo -->
                 <div class="col-md-5">
                     <h5 class="card-title mb-3">Resumo da Folha</h5>
                     <p><strong>Situação dos Colaboradores:</strong><br>{{ dados_dp.SITUACAO_COLABORADORES or 'Não informado' }}</p>
-                    <!-- NOMES ATUALIZADOS -->
                     <p><strong>Líquido Colaboradores:</strong><br>{{ dados_dp.LIQUIDO_COLABORADORES or 'Não informado' }}</p>
                     <p><strong>Líquido Empregadores:</strong><br>{{ dados_dp.LIQUIDO_EMPREGADORES or 'Não informado' }}</p>
                     <p><strong>Valor GPS:</strong><br>{{ dados_dp.VALOR_GPS or 'Não informado' }}</p>
                     <p><strong>Valor GFD Mensal:</strong><br>{{ dados_dp.VALOR_GFD_MENSAL or 'Não informado' }}</p>
                     <p><strong>Valor GFD Rescisória:</strong><br>{{ dados_dp.VALOR_GFD_RESCISORIA or 'Não informado' }}</p>
                 </div>
-                <!-- Coluna de Colaboradores -->
                 <div class="col-md-7">
                     <h5 class="card-title mb-3">Colaboradores (sem Pró-Labore)</h5>
                     {% if dados_dp.COLABORADORES %}
-                        <table class="table table-sm table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Nome</th>
-                                    <th>Admissão</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for col in dados_dp.COLABORADORES %}
-                                <tr>
-                                    <td>{{ col.nome }}</td>
-                                    <td>{{ col.admissao }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Admissão</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for col in dados_dp.COLABORADORES %}
+                                    <tr>
+                                        <td>{{ col.nome }}</td>
+                                        <td>{{ col.admissao }}</td>
+                                        <td><span class="badge {% if col.status and 'Férias' in col.status %}bg-warning text-dark{% elif col.status and 'Afastado' in col.status %}bg-danger{% elif col.status and 'Licença' in col.status %}bg-info text-dark{% else %}bg-light text-dark{% endif %}">{{ col.status or '-' }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     {% else %}
                         <p class="text-body-secondary">Nenhum colaborador (sem pró-labore) encontrado no documento.</p>
                     {% endif %}
@@ -70,17 +67,16 @@
             </div>
         {% endif %}
     </div>
-    <!-- Botões de Ação do DP -->
     {% if dados_dp %}
     <div class="card-footer text-end">
         {% if status_dp == 'Finalizado' %}
-            <form action="{{ url_for('reopen_dp_month', nome_empresa=nome_empresa, periodo=periodo) }}" method="post" class="d-inline">
+            <form action="{{ url_for('dp.reopen_dp_month', nome_empresa=nome_empresa, periodo=periodo) }}" method="post" class="d-inline">
                 <button type="submit" class="btn btn-warning">
                     <i class="bi bi-unlock"></i> Reabrir Mês
                 </button>
             </form>
         {% else %}
-            <form action="{{ url_for('finalize_dp_month', nome_empresa=nome_empresa, periodo=periodo) }}" method="post" class="d-inline">
+            <form action="{{ url_for('dp.finalize_dp_month', nome_empresa=nome_empresa, periodo=periodo) }}" method="post" class="d-inline">
                 <button type="submit" class="btn btn-success">
                     <i class="bi bi-check-circle"></i> Finalizar Mês
                 </button>
@@ -89,4 +85,78 @@
     </div>
     {% endif %}
 </div>
+
+{% if dados_dp.COLABORADORES %}
+<div class="row g-3 my-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-3"><i class="bi bi-sun-fill text-warning"></i> Férias</h5>
+                <ul class="list-unstyled mb-0">
+                    {% set ferias_encontradas = namespace(value=false) %}
+                    {% for col in dados_dp.COLABORADORES %}
+                        {% if col.status and 'Férias' in col.status %}
+                            <li class="mb-2">
+                                <strong>{{ col.nome }}</strong><br>
+                                <small class="text-body-secondary">{{ col.status }}</small>
+                            </li>
+                            {% set ferias_encontradas.value = true %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if not ferias_encontradas.value %}
+                        <p class="text-body-secondary mb-0">Nenhum funcionário em férias neste período.</p>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-3"><i class="bi bi-bandaid-fill text-danger"></i> Afastados</h5>
+                <ul class="list-unstyled mb-0">
+                    {% set afastados_encontrados = namespace(value=false) %}
+                    {% for col in dados_dp.COLABORADORES %}
+                        {% if col.status and 'Afastado' in col.status %}
+                            <li class="mb-2">
+                                <strong>{{ col.nome }}</strong><br>
+                                <small class="text-body-secondary">{{ col.status }}</small>
+                            </li>
+                            {% set afastados_encontrados.value = true %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if not afastados_encontrados.value %}
+                        <p class="text-body-secondary mb-0">Nenhum funcionário afastado neste período.</p>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-3"><i class="bi bi-person-arms-up text-info"></i> Licença Maternidade</h5>
+                <ul class="list-unstyled mb-0">
+                    {% set licenca_encontrada = namespace(value=false) %}
+                    {% for col in dados_dp.COLABORADORES %}
+                        {% if col.status and 'Licença Maternidade' in col.status %}
+                            <li class="mb-2">
+                                <strong>{{ col.nome }}</strong><br>
+                                <small class="text-body-secondary">{{ col.status }}</small>
+                            </li>
+                            {% set licenca_encontrada.value = true %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if not licenca_encontrada.value %}
+                        <p class="text-body-secondary mb-0">Nenhuma funcionária em licença maternidade.</p>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}

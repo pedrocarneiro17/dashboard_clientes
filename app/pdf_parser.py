@@ -42,17 +42,41 @@ def extrair_dados_pdf(pdf_file_stream):
             nome_limpo = re.sub(r'^\d+\s+', '', partes[0]).strip()
             nome_limpo = re.sub(r'\s+[\d\s]+$', '', nome_limpo).strip()
             match_data = re.search(r'(\d{2}/\d{2}/\d{4})', partes[1])
+
             if nome_limpo and match_data:
                 data_admissao = match_data.group(1)
-                proxima_linha = linhas[i + 1] if i + 1 < len(linhas) else ""
-                if len(proxima_linha.strip().split()) <= 3 and proxima_linha and "Pró-Labore" not in proxima_linha:
-                    nome_limpo = f"{nome_limpo} {proxima_linha.strip()}"
-                    contexto_seguinte = "\n".join(linhas[i + 2:min(i + 12, len(linhas))])
-                else:
-                    contexto_seguinte = "\n".join(linhas[i + 1:min(i + 11, len(linhas))])
-                if "Pró-Labore" not in contexto_seguinte:
-                    dados["COLABORADORES"].append({"nome": nome_limpo, "admissao": data_admissao})
+                
+                # --- LÓGICA DE CAPTURA DE STATUS (NOVO) ---
+                # Define o contexto de busca para as próximas 10 linhas
+                contexto_seguinte = "\n".join(linhas[i + 1:min(i + 11, len(linhas))])
+                status_funcionario = None
+                
+                # Procura por Férias
+                match_ferias = re.search(r"Férias:.*Período de gozo: ([\d/]+\s+até\s+[\d/]+)", contexto_seguinte, re.IGNORECASE)
+                if match_ferias:
+                    status_funcionario = f"Férias: {match_ferias.group(1).strip()}"
+                
+                # Se não encontrou Férias, procura por Doença
+                elif re.search(r"Doença", contexto_seguinte, re.IGNORECASE):
+                    match_doenca = re.search(r"Inicio situação em ([\d/]+\s+até\s+[\d/]+)", contexto_seguinte, re.IGNORECASE)
+                    if match_doenca:
+                        # Usa a palavra "Afastado" como solicitado
+                        status_funcionario = f"Afastado: {match_doenca.group(1).strip()}"
+                
+                # Se não encontrou nenhum dos anteriores, procura por Licença Maternidade
+                elif re.search(r"Licença maternidade", contexto_seguinte, re.IGNORECASE):
+                    match_maternidade = re.search(r"Inicio situação em ([\d/]+\s+até\s+[\d/]+)", contexto_seguinte, re.IGNORECASE)
+                    if match_maternidade:
+                        status_funcionario = f"Licença Maternidade: {match_maternidade.group(1).strip()}"
 
+                # Adiciona o colaborador com seu status (pode ser None se nada for encontrado)
+                dados["COLABORADORES"].append({
+                    "nome": nome_limpo, 
+                    "admissao": data_admissao,
+                    "status": status_funcionario
+                })
+
+    # --- RESTANTE DA FUNÇÃO (sem alterações) ---
     match_cnpj = re.search(r"CNPJ:(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})", texto_completo)
     if match_cnpj: dados["CNPJ"] = match_cnpj.group(1).strip()
     match_situacao = re.search(r"Ativos: \d+.*(?:Doença|Outras sit\.): \d+", texto_completo)

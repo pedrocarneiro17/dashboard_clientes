@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="mb-3">
-    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">
+    <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left"></i> Voltar ao Painel Principal
     </a>
 </div>
@@ -17,7 +17,7 @@
             </div>
             <div class="card-body">
                 <p>Selecione os arquivos PDF da folha de pagamento. O sistema irá extrair o período e os dados, atribuindo-os à empresa correta com base no CNPJ encontrado no documento.</p>
-                <form action="{{ url_for('upload_dp') }}" method="post" enctype="multipart/form-data">
+                <form action="{{ url_for('dp.upload_dp') }}" method="post" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="pdf_files" class="form-label">Arquivos PDF</label>
                         <input class="form-control" type="file" id="pdf_files" name="pdf_files" multiple required accept=".pdf">

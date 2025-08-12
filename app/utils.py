@@ -17,10 +17,17 @@ def salvar_dados(dados):
     with open(NOME_ARQUIVO_DADOS, 'w', encoding='utf-8') as f: json.dump(dados, f, indent=4, ensure_ascii=False)
 
 def para_float(valor_str):
-    """Converte uma string para float, tratando vírgulas e valores vazios."""
-    if not valor_str: return 0.0
-    try: return float(str(valor_str).replace(',', '.'))
-    except (ValueError, TypeError): return 0.0
+    """Converte uma string monetária para float, tratando R$, pontos, vírgulas e valores vazios."""
+    if not valor_str:
+        return 0.0
+    try:
+        # Converte para string, remove 'R$', espaços em branco, e pontos (separador de milhar)
+        s = str(valor_str).replace('R$', '').strip().replace('.', '')
+        # Substitui a vírgula (separador decimal) por um ponto
+        s = s.replace(',', '.')
+        return float(s)
+    except (ValueError, TypeError):
+        return 0.0
 
 def login_required(f):
     """Decorador para exigir login em certas rotas."""
@@ -28,6 +35,6 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if 'logged_in' not in session:
             flash('Por favor, faça login para acessar esta página.', 'warning')
-            return redirect(url_for('login'))
+            return redirect(url_for('main.login'))
         return f(*args, **kwargs)
     return decorated_function

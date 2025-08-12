@@ -8,8 +8,8 @@
                     "Serviços tributados": 0.0,
                     "Serviços retidos": 0.0,
                     "Venda (indústria)": 0.0,
-                    "Revenda mercadorias tributárias": 0.0,
-                    "Revenda mercadorias não tributárias": 0.0,
+                    "Revenda mercadorias tributadas": 0.0,
+                    "Revenda mercadorias não tributadas": 0.0,
                     "Revenda de mercadoria monofásica": 0.0,
                     "Locação": 0.0,
                     "lancado": true,
@@ -57,8 +57,8 @@
                     "Serviços tributados": 111.0,
                     "Serviços retidos": 0.0,
                     "Venda (indústria)": 0.0,
-                    "Revenda mercadorias tributárias": 0.0,
-                    "Revenda mercadorias não tributárias": 0.0,
+                    "Revenda mercadorias tributadas": 0.0,
+                    "Revenda mercadorias não tributadas": 0.0,
                     "Revenda de mercadoria monofásica": 0.0,
                     "Locação": 0.0
                 },
@@ -107,8 +107,8 @@
                     "Serviços tributados": 1222.0,
                     "Serviços retidos": 121.0,
                     "Venda (indústria/imóveis)": 23213.0,
-                    "Revenda mercadorias tributárias": 345.0,
-                    "Revenda mercadorias não tributárias": 1230.0,
+                    "Revenda mercadorias tributadas": 345.0,
+                    "Revenda mercadorias não tributadas": 1230.0,
                     "Revenda de mercadoria monofásica": 12332.0,
                     "Locação": 0.0,
                     "Receita sem nota fiscal": 0.0,
@@ -199,7 +199,63 @@
                     "VALOR_GPS": "R$ 741,64",
                     "VALOR_GFD_MENSAL": "R$ 508,07",
                     "VALOR_GFD_RESCISORIA": "R$ 0,00"
-                }
+                },
+                "faturamento": {
+                    "Serviços tributados": 0.0,
+                    "Serviços retidos": 0.0,
+                    "Venda (indústria/imóveis)": 0.0,
+                    "Revenda mercadorias tributadas": 0.0,
+                    "Revenda mercadorias não tributadas": 0.0,
+                    "Revenda de mercadoria monofásica": 0.0,
+                    "Locação": 0.0,
+                    "Receita sem nota fiscal": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "despesas": {
+                    "Compras para revenda": 0.0,
+                    "Compras para uso/consumo": 0.0,
+                    "Compras para ativo imobilizado": 0.0,
+                    "Serviços tomados com nota fiscal": 0.0
+                },
+                "impostos_federal": {
+                    "Simples": 0.0,
+                    "PIS": 0.0,
+                    "COFINS": 0.0,
+                    "IRPJ": 0.0,
+                    "CSLL": 0.0,
+                    "IOF": 0.0,
+                    "IPI": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_estadual": {
+                    "ICMS próprio": 0.0,
+                    "ICMS ST próprio": 0.0,
+                    "DIFAL": 0.0,
+                    "Antecipação": 0.0,
+                    "ICMS ST Entradas": 0.0,
+                    "FEM": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_municipal": {
+                    "ISSQN a pagar": 0.0,
+                    "ISSQN Retido (NF própria)": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "retencoes_federal": {
+                    "CSRF (Retido)": 0.0,
+                    "IRRF (Retido)": 0.0,
+                    "INSS (Retido)": 0.0,
+                    "ISSQN (Retido)": 0.0,
+                    "lancado": false,
+                    "concluido": false,
+                    "sem_notas": false,
+                    "dispensado": false
+                },
+                "status": "Finalizado"
             }
         }
     },
@@ -351,8 +407,8 @@
                             "admissao": "16/04/2025"
                         }
                     ],
-                    "LIQUIDO_EMPREGADORES": "34.230,00",
-                    "LIQUIDO_AUTONOMOS": "1.351,00",
+                    "LIQUIDO_COLABORADORES": "34.230,00",
+                    "LIQUIDO_EMPREGADORES": "1.351,00",
                     "VALOR_GPS": "R$ 14.504,70",
                     "VALOR_GFD_MENSAL": "R$ 3.129,30",
                     "VALOR_GFD_RESCISORIA": "R$ 0,00"
@@ -366,13 +422,497 @@
         "envio_imposto": "Gclick",
         "prazo": "dia 06",
         "active": true,
-        "periodos": {}
+        "periodos": {
+            "2025-08": {
+                "faturamento": {
+                    "Serviços tributados": 0.0,
+                    "Serviços retidos": 0.0,
+                    "Venda (indústria/imóveis)": 0.0,
+                    "Revenda mercadorias tributadas": 0.0,
+                    "Revenda mercadorias não tributadas": 0.0,
+                    "Revenda de mercadoria monofásica": 0.0,
+                    "Locação": 0.0,
+                    "Receita sem nota fiscal": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "despesas": {
+                    "Compras para revenda": 0.0,
+                    "Compras para uso/consumo": 0.0,
+                    "Compras para ativo imobilizado": 0.0,
+                    "Serviços tomados com nota fiscal": 0.0
+                },
+                "impostos_federal": {
+                    "Simples": 0.0,
+                    "PIS": 0.0,
+                    "COFINS": 0.0,
+                    "IRPJ": 0.0,
+                    "CSLL": 0.0,
+                    "IOF": 0.0,
+                    "IPI": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_estadual": {
+                    "ICMS próprio": 0.0,
+                    "ICMS ST próprio": 0.0,
+                    "DIFAL": 0.0,
+                    "Antecipação": 0.0,
+                    "ICMS ST Entradas": 0.0,
+                    "FEM": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_municipal": {
+                    "ISSQN a pagar": 0.0,
+                    "ISSQN Retido (NF própria)": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "retencoes_federal": {
+                    "CSRF (Retido)": 0.0,
+                    "IRRF (Retido)": 0.0,
+                    "INSS (Retido)": 0.0,
+                    "ISSQN (Retido)": 0.0,
+                    "lancado": false,
+                    "concluido": false,
+                    "sem_notas": false,
+                    "dispensado": false
+                },
+                "status": "Em Aberto"
+            }
+        }
     },
     "fdghfdhdf": {
         "cnpj": "",
         "envio_imposto": "Gclick",
         "prazo": "dia 06",
         "active": true,
+        "periodos": {
+            "2025-08": {
+                "faturamento": {
+                    "Serviços tributados": 0.0,
+                    "Serviços retidos": 0.0,
+                    "Venda (indústria/imóveis)": 0.0,
+                    "Revenda mercadorias tributadas": 0.0,
+                    "Revenda mercadorias não tributadas": 0.0,
+                    "Revenda de mercadoria monofásica": 0.0,
+                    "Locação": 0.0,
+                    "Receita sem nota fiscal": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "despesas": {
+                    "Compras para revenda": 0.0,
+                    "Compras para uso/consumo": 0.0,
+                    "Compras para ativo imobilizado": 0.0,
+                    "Serviços tomados com nota fiscal": 0.0
+                },
+                "impostos_federal": {
+                    "Simples": 0.0,
+                    "PIS": 0.0,
+                    "COFINS": 0.0,
+                    "IRPJ": 0.0,
+                    "CSLL": 0.0,
+                    "IOF": 0.0,
+                    "IPI": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_estadual": {
+                    "ICMS próprio": 0.0,
+                    "ICMS ST próprio": 0.0,
+                    "DIFAL": 0.0,
+                    "Antecipação": 0.0,
+                    "ICMS ST Entradas": 0.0,
+                    "FEM": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_municipal": {
+                    "ISSQN a pagar": 0.0,
+                    "ISSQN Retido (NF própria)": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "retencoes_federal": {
+                    "CSRF (Retido)": 0.0,
+                    "IRRF (Retido)": 0.0,
+                    "INSS (Retido)": 0.0,
+                    "ISSQN (Retido)": 0.0,
+                    "lancado": false,
+                    "concluido": false,
+                    "sem_notas": false,
+                    "dispensado": false
+                },
+                "dp_status": "Finalizado",
+                "status": "Em Aberto"
+            }
+        }
+    },
+    "ytrytrytr": {
+        "cnpj": "",
+        "envio_imposto": "Gclick",
+        "prazo": "dia 06",
+        "active": true,
         "periodos": {}
+    },
+    "semd": {
+        "cnpj": "11.371.839/0001-52",
+        "envio_imposto": "Gclick",
+        "prazo": "dia 06",
+        "active": true,
+        "periodos": {
+            "2025-07": {
+                "departamento_pessoal": {
+                    "CNPJ": "11.371.839/0001-52",
+                    "PERIODO": "2025-07",
+                    "SITUACAO_COLABORADORES": "Ativos: 56 Admitidos: 2 Demitidos: 7 Transferidos: 0 Acidente trabalho: 0 Maternidade: 1 Militar: 0 Doença: 3 Outras sit.: 0",
+                    "COLABORADORES": [
+                        {
+                            "nome": "ADILSON DA CONCEICAO VIEIRA",
+                            "admissao": "02/09/2024",
+                            "status": "Férias: 13/06/2025 até 12/07/2025"
+                        },
+                        {
+                            "nome": "ALESSANDRO DE OLIVEIRA",
+                            "admissao": "14/07/2021",
+                            "status": "Férias: 13/06/2025 até 12/07/2025"
+                        },
+                        {
+                            "nome": "ANA PAULA NINFA DAS GRACAS",
+                            "admissao": "13/03/2024",
+                            "status": null
+                        },
+                        {
+                            "nome": "ANA PAULA SILVA",
+                            "admissao": "18/08/2023",
+                            "status": null
+                        },
+                        {
+                            "nome": "BARBARA SILVA MAIA FERREIRA",
+                            "admissao": "26/04/2024",
+                            "status": "Férias: 03/07/2025 até 01/08/2025"
+                        },
+                        {
+                            "nome": "CLAUDIA MARA FERNANDES",
+                            "admissao": "09/08/2023",
+                            "status": null
+                        },
+                        {
+                            "nome": "CRISTINA RODRIGUES DA SILVA",
+                            "admissao": "01/03/2024",
+                            "status": null
+                        },
+                        {
+                            "nome": "CUSTODIO RODRIGUES DE SA",
+                            "admissao": "18/05/2022",
+                            "status": null
+                        },
+                        {
+                            "nome": "DANIEL FERNANDES DA COSTA",
+                            "admissao": "01/11/2018",
+                            "status": null
+                        },
+                        {
+                            "nome": "DARLINGTON PLISCKER LISBOA",
+                            "admissao": "16/06/2021",
+                            "status": null
+                        },
+                        {
+                            "nome": "DIEGO DOS SANTOS CALIXTO",
+                            "admissao": "10/10/2023",
+                            "status": null
+                        },
+                        {
+                            "nome": "DIEGO MARIA CARNEIRO",
+                            "admissao": "02/05/2025",
+                            "status": null
+                        },
+                        {
+                            "nome": "DIEGO MAURILIO DE LIMA",
+                            "admissao": "27/09/2023",
+                            "status": null
+                        },
+                        {
+                            "nome": "EDMUNDO APARECIDO GUILHERME",
+                            "admissao": "14/10/2021",
+                            "status": null
+                        },
+                        {
+                            "nome": "ELIZA MOREIRA DOS SANTOS",
+                            "admissao": "16/01/2018",
+                            "status": null
+                        },
+                        {
+                            "nome": "FLAVIO ROBERTO DE OLIVEIRA",
+                            "admissao": "28/10/2020",
+                            "status": "Férias: 01/07/2025 até 30/07/2025"
+                        },
+                        {
+                            "nome": "GIOVANI DIAS TEIXEIRA",
+                            "admissao": "16/01/2023",
+                            "status": null
+                        },
+                        {
+                            "nome": "GISLENE FERREIRA PINHEIRO",
+                            "admissao": "05/04/2023",
+                            "status": null
+                        },
+                        {
+                            "nome": "GUILHERME ZADRA DELAMORE",
+                            "admissao": "01/02/2019",
+                            "status": null
+                        },
+                        {
+                            "nome": "HUDSON OLIVEIRA GOMES",
+                            "admissao": "07/10/2024",
+                            "status": null
+                        },
+                        {
+                            "nome": "IAGO HENRIQUE REIS MENDES",
+                            "admissao": "26/05/2025",
+                            "status": null
+                        },
+                        {
+                            "nome": "JEFFERSON DE AGUIAR",
+                            "admissao": "27/03/2025",
+                            "status": null
+                        },
+                        {
+                            "nome": "JOAQUIM RIBEIRO MACEDO",
+                            "admissao": "18/08/2023",
+                            "status": null
+                        },
+                        {
+                            "nome": "JOHANN HENRIQUE COSTA GOMES",
+                            "admissao": "07/07/2025",
+                            "status": null
+                        },
+                        {
+                            "nome": "JONAS CAMARA DELAMORE",
+                            "admissao": "21/02/2022",
+                            "status": null
+                        },
+                        {
+                            "nome": "JOSE AURELIO MARTINS",
+                            "admissao": "21/05/2024",
+                            "status": null
+                        },
+                        {
+                            "nome": "JOSE ROBERTO DA SILVA",
+                            "admissao": "09/01/2019",
+                            "status": "Afastado: 22/05/2025 até 06/07/2025"
+                        },
+                        {
+                            "nome": "JULIANA ARCEBISPO SILVA",
+                            "admissao": "16/01/2018",
+                            "status": "Licença Maternidade: 01/04/2025 até 29/07/2025"
+                        },
+                        {
+                            "nome": "KAUA HENRIQUE DOS SANTOS",
+                            "admissao": "07/05/2025",
+                            "status": null
+                        },
+                        {
+                            "nome": "LEANDRO DE OLIVEIRA CASTRO",
+                            "admissao": "26/11/2024",
+                            "status": null
+                        },
+                        {
+                            "nome": "LEONARDO GODOI COSTA",
+                            "admissao": "21/02/2025",
+                            "status": null
+                        },
+                        {
+                            "nome": "LEONARDO MARTINS DOS SANTOS",
+                            "admissao": "15/03/2023",
+                            "status": null
+                        },
+                        {
+                            "nome": "LUCAS DE OLIVEIRA DA SILVA",
+                            "admissao": "27/03/2025",
+                            "status": null
+                        },
+                        {
+                            "nome": "LUCAS ZADRA DELAMORE",
+                            "admissao": "02/12/2009",
+                            "status": null
+                        },
+                        {
+                            "nome": "LUCIANO GONCALVES MARTINS",
+                            "admissao": "03/02/2025",
+                            "status": null
+                        },
+                        {
+                            "nome": "MATEUS FELIPE MARQUES PEREIRA",
+                            "admissao": "24/05/2024",
+                            "status": null
+                        },
+                        {
+                            "nome": "MATHEUS ALVES DOS SANTOS",
+                            "admissao": "23/10/2024",
+                            "status": null
+                        },
+                        {
+                            "nome": "NARCISO COSTA LOPES SILVA",
+                            "admissao": "24/01/2023",
+                            "status": null
+                        },
+                        {
+                            "nome": "NATHALIA CASSIA BALOG DE ASSIS",
+                            "admissao": "08/11/2024",
+                            "status": null
+                        },
+                        {
+                            "nome": "NILTON CARLOS DE SOUZA",
+                            "admissao": "09/08/2024",
+                            "status": null
+                        },
+                        {
+                            "nome": "OCIMARIO MAGELA",
+                            "admissao": "22/10/2019",
+                            "status": null
+                        },
+                        {
+                            "nome": "PABLO HAYMAR CUSTODIO SIMAO",
+                            "admissao": "01/02/2022",
+                            "status": null
+                        },
+                        {
+                            "nome": "PABLO RODRIGUES PEDROSA",
+                            "admissao": "22/02/2024",
+                            "status": null
+                        },
+                        {
+                            "nome": "POLLYANA SOARES DA COSTA",
+                            "admissao": "09/08/2023",
+                            "status": "Férias: 10/07/2025 até 08/08/2025"
+                        },
+                        {
+                            "nome": "REGINALDO DIAS CIRIACO",
+                            "admissao": "29/09/2022",
+                            "status": null
+                        },
+                        {
+                            "nome": "RHYAN ROBERT CALIXTO SILVA",
+                            "admissao": "14/10/2024",
+                            "status": null
+                        },
+                        {
+                            "nome": "ROBERTO EPIFANIO DO",
+                            "admissao": "21/08/2023",
+                            "status": "Férias: 22/07/2025 até 20/08/2025"
+                        },
+                        {
+                            "nome": "ROBSON FABIANO HORTA FLORES",
+                            "admissao": "13/02/2017",
+                            "status": null
+                        },
+                        {
+                            "nome": "RODRIGO ANTONIO BARBOSA DOS",
+                            "admissao": "25/06/2024",
+                            "status": null
+                        },
+                        {
+                            "nome": "RODRIGO DOMINGOS DOS ANJOS",
+                            "admissao": "21/02/2025",
+                            "status": null
+                        },
+                        {
+                            "nome": "RODRIGO TEIXEIRA MORAIS",
+                            "admissao": "14/05/2025",
+                            "status": null
+                        },
+                        {
+                            "nome": "SAMUEL HEITOR CUSTODIO SIMAO",
+                            "admissao": "06/02/2023",
+                            "status": null
+                        },
+                        {
+                            "nome": "SIDNEY TERRA DE OLIVEIRA",
+                            "admissao": "24/05/2021",
+                            "status": null
+                        },
+                        {
+                            "nome": "SILAS SOUZA SILVA",
+                            "admissao": "11/03/2024",
+                            "status": null
+                        },
+                        {
+                            "nome": "VICENTE AUGUSTO SILVA ROSA",
+                            "admissao": "10/02/2025",
+                            "status": null
+                        },
+                        {
+                            "nome": "WASHINGTON ANTONIO SANTOS",
+                            "admissao": "18/07/2025",
+                            "status": null
+                        }
+                    ],
+                    "LIQUIDO_COLABORADORES": "65.255,00",
+                    "LIQUIDO_EMPREGADORES": "16.958,00",
+                    "VALOR_GPS": "R$ 52.471,10",
+                    "VALOR_GFD_MENSAL": "R$ 11.733,30",
+                    "VALOR_GFD_RESCISORIA": "R$ 4.748,00"
+                },
+                "dp_status": "Em Aberto",
+                "faturamento": {
+                    "Serviços tributados": 4234.0,
+                    "Serviços retidos": 423.0,
+                    "Venda (indústria/imóveis)": 554.0,
+                    "Revenda mercadorias tributadas": 656.0,
+                    "Revenda mercadorias não tributadas": 6665.0,
+                    "Revenda de mercadoria monofásica": 665.0,
+                    "Locação": 65.0,
+                    "Receita sem nota fiscal": 45643.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "despesas": {
+                    "Compras para revenda": 2543.0,
+                    "Compras para uso/consumo": 45.0,
+                    "Compras para ativo imobilizado": 545.0,
+                    "Serviços tomados com nota fiscal": 1230.0
+                },
+                "impostos_federal": {
+                    "Simples": 54.0,
+                    "PIS": 1220.0,
+                    "COFINS": 6655.0,
+                    "IRPJ": 654.0,
+                    "CSLL": 766.0,
+                    "IOF": 654.0,
+                    "IPI": 120.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_estadual": {
+                    "ICMS próprio": 230.0,
+                    "ICMS ST próprio": 65.0,
+                    "DIFAL": 3240.0,
+                    "Antecipação": 230.0,
+                    "ICMS ST Entradas": 6754.0,
+                    "FEM": 230.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_municipal": {
+                    "ISSQN a pagar": 654.0,
+                    "ISSQN Retido (NF própria)": 45.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "retencoes_federal": {
+                    "CSRF (Retido)": 543.0,
+                    "IRRF (Retido)": 45.0,
+                    "INSS (Retido)": 30.0,
+                    "ISSQN (Retido)": 1.0,
+                    "lancado": false,
+                    "concluido": false,
+                    "sem_notas": false,
+                    "dispensado": false
+                }
+            }
+        }
     }
 }
