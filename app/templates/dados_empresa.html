@@ -46,10 +46,11 @@
                 <div class="col-sm-8">
                     <div class="input-group">
                         <span class="input-group-text">R$</span>
-                        <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
-                               value="{{ dados.get('faturamento', {}).get(campo, '')|string|replace('.', ',') }}"
+                        {% set valor = dados.get('faturamento', {}).get(campo) %}
+                        <input type="text" class="form-control" id="{{ campo }}" name="{{ campo }}" 
+                               value="{% if valor %}{{ valor|string|replace('.', ',') }}{% endif %}"
                                placeholder="0,00"
-                               oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');"
+                               oninput="formatarMoeda(this)"
                                {% if status == 'Finalizado' %}disabled{% endif %}>
                     </div>
                 </div>
@@ -76,10 +77,11 @@
                 <div class="col-sm-8">
                     <div class="input-group">
                         <span class="input-group-text">R$</span>
-                        <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
-                               value="{{ dados.get('impostos_federal', {}).get(campo, '')|string|replace('.', ',') }}"
+                        {% set valor = dados.get('impostos_federal', {}).get(campo) %}
+                        <input type="text" class="form-control" id="{{ campo }}" name="{{ campo }}" 
+                               value="{% if valor %}{{ valor|string|replace('.', ',') }}{% endif %}"
                                placeholder="0,00"
-                               oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');"
+                               oninput="formatarMoeda(this)"
                                {% if status == 'Finalizado' %}disabled{% endif %}>
                     </div>
                 </div>
@@ -104,10 +106,11 @@
                 <div class="col-sm-8">
                     <div class="input-group">
                         <span class="input-group-text">R$</span>
-                        <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
-                               value="{{ dados.get('impostos_estadual', {}).get(campo, '')|string|replace('.', ',') }}"
+                        {% set valor = dados.get('impostos_estadual', {}).get(campo) %}
+                        <input type="text" class="form-control" id="{{ campo }}" name="{{ campo }}" 
+                               value="{% if valor %}{{ valor|string|replace('.', ',') }}{% endif %}"
                                placeholder="0,00"
-                               oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');"
+                               oninput="formatarMoeda(this)"
                                {% if status == 'Finalizado' %}disabled{% endif %}>
                     </div>
                 </div>
@@ -132,10 +135,11 @@
                 <div class="col-sm-8">
                     <div class="input-group">
                         <span class="input-group-text">R$</span>
-                        <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
-                               value="{{ dados.get('impostos_municipal', {}).get(campo, '')|string|replace('.', ',') }}"
+                        {% set valor = dados.get('impostos_municipal', {}).get(campo) %}
+                        <input type="text" class="form-control" id="{{ campo }}" name="{{ campo }}" 
+                               value="{% if valor %}{{ valor|string|replace('.', ',') }}{% endif %}"
                                placeholder="0,00"
-                               oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');"
+                               oninput="formatarMoeda(this)"
                                {% if status == 'Finalizado' %}disabled{% endif %}>
                     </div>
                 </div>
@@ -160,10 +164,11 @@
                 <div class="col-sm-8">
                     <div class="input-group">
                         <span class="input-group-text">R$</span>
-                        <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
-                               value="{{ dados.get('retencoes_federal', {}).get(campo, '')|string|replace('.', ',') }}"
+                        {% set valor = dados.get('retencoes_federal', {}).get(campo) %}
+                        <input type="text" class="form-control" id="{{ campo }}" name="{{ campo }}" 
+                               value="{% if valor %}{{ valor|string|replace('.', ',') }}{% endif %}"
                                placeholder="0,00"
-                               oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');"
+                               oninput="formatarMoeda(this)"
                                {% if status == 'Finalizado' %}disabled{% endif %}>
                     </div>
                 </div>
@@ -197,10 +202,11 @@
                 <div class="col-sm-8">
                     <div class="input-group">
                         <span class="input-group-text">R$</span>
-                        <input type="text" class="form-control numeric-input" id="{{ campo }}" name="{{ campo }}" 
-                               value="{{ dados.get('despesas', {}).get(campo, '')|string|replace('.', ',') }}"
+                        {% set valor = dados.get('despesas', {}).get(campo) %}
+                        <input type="text" class="form-control" id="{{ campo }}" name="{{ campo }}" 
+                               value="{% if valor %}{{ valor|string|replace('.', ',') }}{% endif %}"
                                placeholder="0,00"
-                               oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace(/\\.(?=.*\\.)/g, '');"
+                               oninput="formatarMoeda(this)"
                                {% if status == 'Finalizado' %}disabled{% endif %}>
                     </div>
                 </div>
@@ -221,13 +227,57 @@
         <div class="d-flex align-items-center">
             <a href="{{ url_for('fiscal.selecionar_departamento', nome_empresa=nome_empresa, periodo=periodo) }}" class="btn btn-secondary me-2">Cancelar</a>
             {% if status == 'Finalizado' %}
-                <button type="submit" class="btn btn-primary me-2" disabled>Salvar Dados</button>
-                <button type="submit" class="btn btn-warning" formaction="{{ url_for('fiscal.reopen_month', nome_empresa=nome_empresa, periodo=periodo) }}"><i class="bi bi-unlock"></i> Reabrir Mês</button>
+            <button type="submit" class="btn btn-primary me-2" disabled>Salvar Dados</button>
+            <button type="submit" class="btn btn-warning" formaction="{{ url_for('fiscal.reopen_month', nome_empresa=nome_empresa, periodo=periodo) }}"><i class="bi bi-unlock"></i> Reabrir Mês</button>
             {% else %}
-                <button type="submit" class="btn btn-primary me-2">Salvar Dados</button>
-                <button type="submit" class="btn btn-success" formaction="{{ url_for('fiscal.finalize_month', nome_empresa=nome_empresa, periodo=periodo) }}"><i class="bi bi-check-circle"></i> Finalizar Mês</button>
+            <button type="submit" class="btn btn-primary me-2">Salvar Dados</button>
+            <button type="submit" class="btn btn-success" formaction="{{ url_for('fiscal.finalize_month', nome_empresa=nome_empresa, periodo=periodo) }}"><i class="bi bi-check-circle"></i> Finalizar Mês</button>
             {% endif %}
         </div>
     </div>
 </form>
+
+<script>
+function formatarMoeda(input) {
+    let valor = input.value;
+    valor = valor.replace(/\D/g, ""); // Remove tudo o que não é dígito
+    valor = valor.replace(/^0+/, ""); // Remove zeros à esquerda
+
+    if (valor.length === 0) {
+        input.value = "";
+        return;
+    }
+    if (valor.length === 1) {
+        input.value = "0,0" + valor;
+        return;
+    }
+    if (valor.length === 2) {
+        input.value = "0," + valor;
+        return;
+    }
+    
+    // Separa a parte inteira da decimal
+    let parteInteira = valor.slice(0, valor.length - 2);
+    let parteDecimal = valor.slice(valor.length - 2);
+    
+    // Adiciona o separador de milhar
+    parteInteira = parteInteira.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    
+    input.value = parteInteira + "," + parteDecimal;
+}
+
+// Formata os valores que já existem ao carregar a página
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('input[oninput="formatarMoeda(this)"]');
+    inputs.forEach(input => {
+        if (input.value) {
+            // Adiciona zeros para garantir a formatação correta
+            let valorLimpo = input.value.replace(/\D/g, '');
+            input.value = valorLimpo;
+            formatarMoeda(input);
+        }
+    });
+});
+</script>
+
 {% endblock %}

@@ -159,6 +159,63 @@
                     "dispensado": false
                 },
                 "status": "Finalizado"
+            },
+            "2025-08": {
+                "faturamento": {
+                    "Serviços tributados": 123.23,
+                    "Serviços retidos": 0.0,
+                    "Venda (indústria/imóveis)": 21321.33,
+                    "Revenda mercadorias tributadas": 0.0,
+                    "Revenda mercadorias não tributadas": 0.0,
+                    "Revenda de mercadoria monofásica": 0.0,
+                    "Locação": 0.0,
+                    "Receita sem nota fiscal": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "despesas": {
+                    "Compras para revenda": 0.0,
+                    "Compras para uso/consumo": 0.0,
+                    "Compras para ativo imobilizado": 0.0,
+                    "Serviços tomados com nota fiscal": 0.0
+                },
+                "impostos_federal": {
+                    "Simples": 0.0,
+                    "PIS": 0.0,
+                    "COFINS": 0.0,
+                    "IRPJ": 0.0,
+                    "CSLL": 0.0,
+                    "IOF": 0.0,
+                    "IPI": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_estadual": {
+                    "ICMS próprio": 0.0,
+                    "ICMS ST próprio": 0.0,
+                    "DIFAL": 0.0,
+                    "Antecipação": 0.0,
+                    "ICMS ST Entradas": 0.0,
+                    "FEM": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_municipal": {
+                    "ISSQN a pagar": 0.0,
+                    "ISSQN Retido (NF própria)": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "retencoes_federal": {
+                    "CSRF (Retido)": 0.0,
+                    "IRRF (Retido)": 0.0,
+                    "INSS (Retido)": 0.0,
+                    "ISSQN (Retido)": 0.0,
+                    "lancado": false,
+                    "concluido": false,
+                    "sem_notas": false,
+                    "dispensado": false
+                }
             }
         }
     },
@@ -341,79 +398,7 @@
                 "status": "Finalizado"
             },
             "2025-07": {
-                "departamento_pessoal": {
-                    "CNPJ": "23.833.668/0001-15",
-                    "PERIODO": "2025-07",
-                    "SITUACAO_COLABORADORES": "Ativos: 16 Admitidos: 0 Demitidos: 0 Transferidos: 0 Acidente trabalho: 0 Maternidade: 0 Militar: 0 Doença: 1 Outras sit.: 1",
-                    "COLABORADORES": [
-                        {
-                            "nome": "ANGELICA JUNIA PEREIRA",
-                            "admissao": "01/06/2025"
-                        },
-                        {
-                            "nome": "AUGUSTA IZABEL FONSECA",
-                            "admissao": "13/02/2025"
-                        },
-                        {
-                            "nome": "ELENA DE MATOS ARAUJO",
-                            "admissao": "06/06/2006"
-                        },
-                        {
-                            "nome": "GABRIELA LUANA SILVA MACIEL",
-                            "admissao": "03/04/2025"
-                        },
-                        {
-                            "nome": "GERALDO LINO FERREIRA",
-                            "admissao": "11/05/2011"
-                        },
-                        {
-                            "nome": "GLEIDE RODRIGUES DOS SANTOS",
-                            "admissao": "21/05/2025"
-                        },
-                        {
-                            "nome": "JOSE ROBERTO CORREIA",
-                            "admissao": "01/04/2019"
-                        },
-                        {
-                            "nome": "MARIA DA CONCEICAO SILVA",
-                            "admissao": "09/08/2017"
-                        },
-                        {
-                            "nome": "MARIA J. PEREIRA TEIXEIRA",
-                            "admissao": "07/02/1993"
-                        },
-                        {
-                            "nome": "NATHAN LUCAS SILVA DE FREITAS",
-                            "admissao": "01/10/2024"
-                        },
-                        {
-                            "nome": "RAQUEL SOARES MARTINS",
-                            "admissao": "02/05/2025"
-                        },
-                        {
-                            "nome": "ROBERTO DE PAULA UMBELINO",
-                            "admissao": "01/09/2022"
-                        },
-                        {
-                            "nome": "SERGIO DE OLIVEIRA",
-                            "admissao": "01/03/2013"
-                        },
-                        {
-                            "nome": "SHIRLEY MARIA FERREIRA",
-                            "admissao": "15/09/2006"
-                        },
-                        {
-                            "nome": "VILMA DA SILVA RIBEIRO",
-                            "admissao": "16/04/2025"
-                        }
-                    ],
-                    "LIQUIDO_COLABORADORES": "34.230,00",
-                    "LIQUIDO_EMPREGADORES": "1.351,00",
-                    "VALOR_GPS": "R$ 14.504,70",
-                    "VALOR_GFD_MENSAL": "R$ 3.129,30",
-                    "VALOR_GFD_RESCISORIA": "R$ 0,00"
-                },
-                "dp_status": "Finalizado"
+                "dp_status": "Em Aberto"
             }
         }
     },
@@ -856,62 +841,120 @@
                     "VALOR_GFD_MENSAL": "R$ 11.733,30",
                     "VALOR_GFD_RESCISORIA": "R$ 4.748,00"
                 },
-                "dp_status": "Em Aberto",
+                "dp_status": "Finalizado",
                 "faturamento": {
-                    "Serviços tributados": 4234.0,
-                    "Serviços retidos": 423.0,
-                    "Venda (indústria/imóveis)": 554.0,
-                    "Revenda mercadorias tributadas": 656.0,
-                    "Revenda mercadorias não tributadas": 6665.0,
-                    "Revenda de mercadoria monofásica": 665.0,
-                    "Locação": 65.0,
-                    "Receita sem nota fiscal": 45643.0,
+                    "Serviços tributados": 423.4,
+                    "Serviços retidos": 42.3,
+                    "Venda (indústria/imóveis)": 55.4,
+                    "Revenda mercadorias tributadas": 65.6,
+                    "Revenda mercadorias não tributadas": 666.5,
+                    "Revenda de mercadoria monofásica": 66.5,
+                    "Locação": 6.5,
+                    "Receita sem nota fiscal": 4564.3,
                     "lancado": false,
                     "concluido": false
                 },
                 "despesas": {
-                    "Compras para revenda": 2543.0,
-                    "Compras para uso/consumo": 45.0,
-                    "Compras para ativo imobilizado": 545.0,
-                    "Serviços tomados com nota fiscal": 1230.0
+                    "Compras para revenda": 254.3,
+                    "Compras para uso/consumo": 4.5,
+                    "Compras para ativo imobilizado": 54.5,
+                    "Serviços tomados com nota fiscal": 123.0
                 },
                 "impostos_federal": {
-                    "Simples": 54.0,
-                    "PIS": 1220.0,
-                    "COFINS": 6655.0,
-                    "IRPJ": 654.0,
-                    "CSLL": 766.0,
-                    "IOF": 654.0,
-                    "IPI": 120.0,
+                    "Simples": 5.4,
+                    "PIS": 122.0,
+                    "COFINS": 665.5,
+                    "IRPJ": 65.4,
+                    "CSLL": 76.6,
+                    "IOF": 65.4,
+                    "IPI": 12.0,
                     "lancado": false,
                     "concluido": false
                 },
                 "impostos_estadual": {
-                    "ICMS próprio": 230.0,
-                    "ICMS ST próprio": 65.0,
-                    "DIFAL": 3240.0,
-                    "Antecipação": 230.0,
-                    "ICMS ST Entradas": 6754.0,
-                    "FEM": 230.0,
+                    "ICMS próprio": 23.0,
+                    "ICMS ST próprio": 6.5,
+                    "DIFAL": 324.0,
+                    "Antecipação": 23.0,
+                    "ICMS ST Entradas": 675.4,
+                    "FEM": 23.0,
                     "lancado": false,
                     "concluido": false
                 },
                 "impostos_municipal": {
-                    "ISSQN a pagar": 654.0,
-                    "ISSQN Retido (NF própria)": 45.0,
+                    "ISSQN a pagar": 65.4,
+                    "ISSQN Retido (NF própria)": 4.5,
                     "lancado": false,
                     "concluido": false
                 },
                 "retencoes_federal": {
-                    "CSRF (Retido)": 543.0,
-                    "IRRF (Retido)": 45.0,
-                    "INSS (Retido)": 30.0,
-                    "ISSQN (Retido)": 1.0,
+                    "CSRF (Retido)": 54.3,
+                    "IRRF (Retido)": 4.5,
+                    "INSS (Retido)": 3.0,
+                    "ISSQN (Retido)": 0.1,
                     "lancado": false,
                     "concluido": false,
                     "sem_notas": false,
                     "dispensado": false
                 }
+            },
+            "2025-08": {
+                "faturamento": {
+                    "Serviços tributados": 1232.13,
+                    "Serviços retidos": 231.23,
+                    "Venda (indústria/imóveis)": 1.23,
+                    "Revenda mercadorias tributadas": 213.21,
+                    "Revenda mercadorias não tributadas": 23.21,
+                    "Revenda de mercadoria monofásica": 32.13,
+                    "Locação": 123.21,
+                    "Receita sem nota fiscal": 213.21,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "despesas": {
+                    "Compras para revenda": 0.0,
+                    "Compras para uso/consumo": 0.0,
+                    "Compras para ativo imobilizado": 0.0,
+                    "Serviços tomados com nota fiscal": 0.0
+                },
+                "impostos_federal": {
+                    "Simples": 0.0,
+                    "PIS": 0.0,
+                    "COFINS": 0.0,
+                    "IRPJ": 0.0,
+                    "CSLL": 0.0,
+                    "IOF": 0.0,
+                    "IPI": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_estadual": {
+                    "ICMS próprio": 0.0,
+                    "ICMS ST próprio": 0.0,
+                    "DIFAL": 0.0,
+                    "Antecipação": 0.0,
+                    "ICMS ST Entradas": 0.0,
+                    "FEM": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_municipal": {
+                    "ISSQN a pagar": 0.0,
+                    "ISSQN Retido (NF própria)": 0.0,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "retencoes_federal": {
+                    "CSRF (Retido)": 0.0,
+                    "IRRF (Retido)": 0.0,
+                    "INSS (Retido)": 0.0,
+                    "ISSQN (Retido)": 0.0,
+                    "lancado": false,
+                    "concluido": false,
+                    "sem_notas": false,
+                    "dispensado": false
+                },
+                "status": "Finalizado"
             }
         }
     }

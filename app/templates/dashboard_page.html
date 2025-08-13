@@ -17,15 +17,15 @@
     {% macro chart_card(title, chart_id, chart_data) %}
     <div class="col">
         <div class="card h-100">
-            <div class="card-header py-2 fw-bold">{{ title }}</div>
+            <div class="card-header py-2 fw-bold text-center">{{ title }}</div>
             <div class="card-body p-2">
                 <div class="row align-items-center g-2">
-                    <div class="col-md-6 d-flex align-items-center">
-                        <div style="position: relative; width: 100%;">
+                    <div class="col-md-7 d-flex align-items-center">
+                        <div style="position: relative; width: 100%; height: 250px;">
                             <canvas id="{{ chart_id }}"></canvas>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-5">
                         <table class="table table-sm table-hover small mb-0">
                             <thead class="table-light">
                                 <tr>
@@ -83,6 +83,10 @@
                         <span class="fs-5">Total Impostos (Fiscal + DP)</span>
                         <span class="fs-5 text-warning fw-bold">{{ "R$ {:,.2f}".format(resumo_fiscal.total_impostos).replace(",", "v").replace(".", ",").replace("v", ".") }}</span>
                     </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0 border-top pt-2">
+                        <strong class="fs-5">Lucro Líquido</strong>
+                        <strong class="fs-5 {% if resumo_fiscal.lucro_liquido >= 0 %}text-primary{% else %}text-danger{% endif %} fw-bold">{{ "R$ {:,.2f}".format(resumo_fiscal.lucro_liquido).replace(",", "v").replace(".", ",").replace("v", ".") }}</strong>
+                    </div>
                 </div>
             </div>
         </div>
@@ -109,6 +113,12 @@
         </div>
         {% endif %}
 
+        {% if dp_chart %}
+        <div class="row g-4 mb-4">
+             {{ chart_card(dp_chart.title, dp_chart.id, dp_chart.data) }}
+        </div>
+        {% endif %}
+        
         {% if situacao_colaboradores or (colaboradores | selectattr('status') | list | length > 0) %}
         <div class="card">
             <div class="card-body">
@@ -159,12 +169,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-        {% endif %}
-        
-        {% if dp_chart %}
-        <div class="row g-4 mt-4">
-             {{ chart_card(dp_chart.title, dp_chart.id, dp_chart.data) }}
         </div>
         {% endif %}
     </div>
@@ -265,8 +269,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const pdfWidth = pdf.internal.pageSize.getWidth();
         
         const options = {
-            // Alterado para '2' para máxima qualidade (HD)
-            scale: 2, 
+            scale: 2,
             useCORS: true,
             onclone: (doc) => {
                 doc.body.dataset.bsTheme = 'light';

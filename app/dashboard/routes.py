@@ -25,9 +25,27 @@ def view_dashboard(nome_empresa, periodo):
         data = [para_float(v) for k, v in dados_filtrados.items() if k not in campos_nao_grafico and para_float(v) > 0]
         return {'labels': labels, 'data': data}
 
-    # --- Gráficos Fiscais ---
+    # --- NOVO: Consolidação dos dados de Faturamento ---
+    faturamento_original = dados_periodo.get('faturamento', {})
+    
+    valor_servicos = para_float(faturamento_original.get('Serviços tributados')) + \
+                     para_float(faturamento_original.get('Serviços retidos'))
+
+    valor_revenda = para_float(faturamento_original.get('Revenda mercadorias tributadas')) + \
+                    para_float(faturamento_original.get('Revenda mercadorias não tributárias')) + \
+                    para_float(faturamento_original.get('Revenda de mercadoria monofásica'))
+
+    faturamento_consolidado = {
+        "SERVIÇOS": valor_servicos,
+        "REVENDA DE MERCADORIAS": valor_revenda,
+        "VENDA (INDÚSTRIA/IMÓVEIS)": para_float(faturamento_original.get('Venda (indústria/imóveis)')),
+        "LOCAÇÃO": para_float(faturamento_original.get('Locação')),
+        "RECEITA SEM NOTA FISCAL": para_float(faturamento_original.get('Receita sem nota fiscal'))
+    }
+
+    # --- Preparação dos Gráficos ---
     fiscal_charts = [
-        {"title": "Faturamento", "data": preparar_dados_grafico(dados_periodo.get('faturamento')), "id": "chartFaturamento"},
+        {"title": "Faturamento", "data": preparar_dados_grafico(faturamento_consolidado), "id": "chartFaturamento"},
         {"title": "Despesas", "data": preparar_dados_grafico(dados_periodo.get('despesas')), "id": "chartDespesas"},
         {"title": "Impostos Federais", "data": preparar_dados_grafico(dados_periodo.get('impostos_federal')), "id": "chartImpFederal"},
         {"title": "Impostos Estaduais", "data": preparar_dados_grafico(dados_periodo.get('impostos_estadual')), "id": "chartImpEstadual"},
@@ -36,46 +54,38 @@ def view_dashboard(nome_empresa, periodo):
     ]
     fiscal_charts_filtrados = [chart for chart in fiscal_charts if chart['data']['data']]
     
-    # --- Gráfico do Departamento Pessoal ---
     dp_data = dados_periodo.get('departamento_pessoal', {})
-    # Renomeia as chaves para exibição, mantendo o parser original
     if dp_data:
-        if 'VALOR_GFD_MENSAL' in dp_data:
-            dp_data['VALOR_FGTS_MENSAL'] = dp_data.pop('VALOR_GFD_MENSAL')
-        if 'VALOR_GFD_RESCISORIA' in dp_data:
-            dp_data['VALOR_FGTS_RESCISORIA'] = dp_data.pop('VALOR_GFD_RESCISORIA')
+        if 'VALOR_GFD_MENSAL' in dp_data: dp_data['VALOR_FGTS_MENSAL'] = dp_data.pop('VALOR_GFD_MENSAL')
+        if 'VALOR_GFD_RESCISORIA' in dp_data: dp_data['VALOR_FGTS_RESCISORIA'] = dp_data.pop('VALOR_GFD_RESCISORIA')
             
     dp_keys = ['LIQUIDO_COLABORADORES', 'LIQUIDO_EMPREGADORES', 'VALOR_GPS', 'VALOR_FGTS_MENSAL', 'VALOR_FGTS_RESCISORIA']
     dp_chart_data = preparar_dados_grafico(dp_data, dp_keys)
     dp_chart = {"title": "Valores Departamento Pessoal", "data": dp_chart_data, "id": "chartDP"} if dp_chart_data['data'] else None
 
-    # --- Cálculo dos Resumos (Lógica Corrigida) ---
-    
-    # Captura valores individuais do DP
+    # --- Cálculo dos Resumos com Lucro Líquido ---
     liquido_colaboradores = para_float(dp_data.get('LIQUIDO_COLABORADORES'))
     liquido_empregadores = para_float(dp_data.get('LIQUIDO_EMPREGADORES'))
     valor_gps = para_float(dp_data.get('VALOR_GPS'))
     valor_fgts_mensal = para_float(dp_data.get('VALOR_FGTS_MENSAL'))
     valor_fgts_rescisoria = para_float(dp_data.get('VALOR_FGTS_RESCISORIA'))
 
-    # Calcula totais fiscais
-    total_faturamento = sum(fiscal_charts[0]['data']['data'])
+    total_faturamento = sum(para_float(v) for k, v in faturamento_original.items() if k not in campos_nao_grafico)
     total_despesas_fiscal = sum(fiscal_charts[1]['data']['data'])
     total_impostos_fiscal = sum(fiscal_charts[2]['data']['data']) + sum(fiscal_charts[3]['data']['data']) + sum(fiscal_charts[4]['data']['data'])
 
-    # SOMA os valores do DP ao total de impostos
     total_impostos_geral = total_impostos_fiscal + valor_gps + valor_fgts_mensal + valor_fgts_rescisoria
-    
-    # CRIA o novo total de Despesas + Custos
     total_despesas_e_custos = total_despesas_fiscal + liquido_colaboradores + liquido_empregadores
+    
+    lucro_liquido = total_faturamento - total_despesas_e_custos - total_impostos_geral
 
     resumo_fiscal = {
         "total_faturamento": total_faturamento,
         "total_despesas_e_custos": total_despesas_e_custos,
         "total_impostos": total_impostos_geral,
+        "lucro_liquido": lucro_liquido
     }
     
-    # --- Dados Descritivos do DP ---
     situacao_colaboradores = dp_data.get('SITUACAO_COLABORADORES')
     colaboradores = dp_data.get('COLABORADORES', [])
 

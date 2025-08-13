@@ -97,7 +97,8 @@ def finalize_month(nome_empresa, periodo):
 @fiscal_bp.route('/reopen_month/<path:nome_empresa>/<periodo>', methods=['POST'])
 @login_required
 def reopen_month(nome_empresa, periodo):
-    _save_fiscal_data(nome_empresa, periodo, request.form)
+    # A chamada para _save_fiscal_data foi REMOVIDA daqui.
+    # Esta função agora apenas altera o status.
 
     dados_gerais = carregar_dados()
     if nome_empresa in dados_gerais and periodo in dados_gerais[nome_empresa].get('periodos', {}):
@@ -107,26 +108,6 @@ def reopen_month(nome_empresa, periodo):
     else:
         flash('Erro ao reabrir o mês.', 'danger')
     return redirect(url_for('fiscal.dados_empresa', nome_empresa=nome_empresa, periodo=periodo))
-
-def get_dashboard_data(nome_empresa, periodo):
-    dados = carregar_dados()
-    dados_empresa_especifica = dados.get(nome_empresa, {})
-    dados_periodo = dados_empresa_especifica.get('periodos', {}).get(periodo, {})
-    
-    def prepare_chart_data(data_dict):
-        chart_data = {k: v for k, v in data_dict.items() if isinstance(v, (int, float)) and v > 0}
-        return { "labels": list(chart_data.keys()), "data": list(chart_data.values()) }
-
-    return {
-        'nome_empresa': nome_empresa, 'periodo': periodo,
-        'dados_empresa': dados_empresa_especifica,
-        'chart_faturamento': prepare_chart_data(dados_periodo.get('faturamento', {})),
-        'chart_despesas': prepare_chart_data(dados_periodo.get('despesas', {})),
-        'chart_imp_federal': prepare_chart_data(dados_periodo.get('impostos_federal', {})),
-        'chart_imp_estadual': prepare_chart_data(dados_periodo.get('impostos_estadual', {})),
-        'chart_imp_municipal': prepare_chart_data(dados_periodo.get('impostos_municipal', {})),
-        'chart_ret_federal': prepare_chart_data(dados_periodo.get('retencoes_federal', {}))
-    }
 
 @fiscal_bp.route('/export_xlsx')
 @login_required
@@ -153,7 +134,7 @@ def export_xlsx():
               CAMPOS_FATURAMENTO + CAMPOS_DESPESAS + CAMPOS_IMPOSTOS_FEDERAL + CAMPOS_IMPOSTOS_ESTADUAL + CAMPOS_IMPOSTOS_MUNICIPAL + CAMPOS_RETENCOES_FEDERAL
     ws.append(headers)
 
-    for nome_empresa, detalhes_empresa in dados.items():
+    for nome_empresa, detalhes_empresa in sorted(dados.items()):
         if not detalhes_empresa.get('active', True): continue
         periodos = detalhes_empresa.get('periodos', {})
         if periodo_alvo in periodos:

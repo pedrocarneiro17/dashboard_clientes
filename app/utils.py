@@ -16,14 +16,19 @@ def salvar_dados(dados):
     """Salva os dados no arquivo JSON."""
     with open(NOME_ARQUIVO_DADOS, 'w', encoding='utf-8') as f: json.dump(dados, f, indent=4, ensure_ascii=False)
 
-def para_float(valor_str):
-    """Converte uma string monetária para float, tratando R$, pontos, vírgulas e valores vazios."""
-    if not valor_str:
+def para_float(valor):
+    """Converte uma string monetária ou um número para float."""
+    # Se o valor já for um número, apenas o retorna como float.
+    if isinstance(valor, (int, float)):
+        return float(valor)
+    
+    # Se for uma string, processa-a.
+    if not valor:
         return 0.0
     try:
-        # Converte para string, remove 'R$', espaços em branco, e pontos (separador de milhar)
-        s = str(valor_str).replace('R$', '').strip().replace('.', '')
-        # Substitui a vírgula (separador decimal) por um ponto
+        # Garante que é uma string, remove 'R$', espaços, e o ponto de milhar
+        s = str(valor).replace('R$', '').strip().replace('.', '')
+        # Substitui a vírgula decimal por um ponto decimal
         s = s.replace(',', '.')
         return float(s)
     except (ValueError, TypeError):
