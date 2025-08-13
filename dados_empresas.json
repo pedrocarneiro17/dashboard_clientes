@@ -843,60 +843,61 @@
                 },
                 "dp_status": "Finalizado",
                 "faturamento": {
-                    "Serviços tributados": 423.4,
-                    "Serviços retidos": 42.3,
-                    "Venda (indústria/imóveis)": 55.4,
-                    "Revenda mercadorias tributadas": 65.6,
-                    "Revenda mercadorias não tributadas": 666.5,
-                    "Revenda de mercadoria monofásica": 66.5,
-                    "Locação": 6.5,
-                    "Receita sem nota fiscal": 4564.3,
+                    "Serviços tributados": 42.34,
+                    "Serviços retidos": 4.23,
+                    "Venda (indústria/imóveis)": 5.54,
+                    "Revenda mercadorias tributadas": 6.56,
+                    "Revenda mercadorias não tributadas": 66.65,
+                    "Revenda de mercadoria monofásica": 6.65,
+                    "Locação": 0.65,
+                    "Receita sem nota fiscal": 456.43,
                     "lancado": false,
                     "concluido": false
                 },
                 "despesas": {
-                    "Compras para revenda": 254.3,
-                    "Compras para uso/consumo": 4.5,
-                    "Compras para ativo imobilizado": 54.5,
-                    "Serviços tomados com nota fiscal": 123.0
+                    "Compras para revenda": 25.43,
+                    "Compras para uso/consumo": 0.45,
+                    "Compras para ativo imobilizado": 5.45,
+                    "Serviços tomados com nota fiscal": 12.3
                 },
                 "impostos_federal": {
-                    "Simples": 5.4,
-                    "PIS": 122.0,
-                    "COFINS": 665.5,
-                    "IRPJ": 65.4,
-                    "CSLL": 76.6,
-                    "IOF": 65.4,
-                    "IPI": 12.0,
+                    "Simples": 0.54,
+                    "PIS": 12.2,
+                    "COFINS": 66.55,
+                    "IRPJ": 6.54,
+                    "CSLL": 7.66,
+                    "IOF": 6.54,
+                    "IPI": 1.2,
                     "lancado": false,
                     "concluido": false
                 },
                 "impostos_estadual": {
-                    "ICMS próprio": 23.0,
-                    "ICMS ST próprio": 6.5,
-                    "DIFAL": 324.0,
-                    "Antecipação": 23.0,
-                    "ICMS ST Entradas": 675.4,
-                    "FEM": 23.0,
+                    "ICMS próprio": 2.3,
+                    "ICMS ST próprio": 0.65,
+                    "DIFAL": 32.4,
+                    "Antecipação": 2.3,
+                    "ICMS ST Entradas": 67.54,
+                    "FEM": 2.3,
                     "lancado": false,
                     "concluido": false
                 },
                 "impostos_municipal": {
-                    "ISSQN a pagar": 65.4,
-                    "ISSQN Retido (NF própria)": 4.5,
+                    "ISSQN a pagar": 6.54,
+                    "ISSQN Retido (NF própria)": 0.45,
                     "lancado": false,
                     "concluido": false
                 },
                 "retencoes_federal": {
-                    "CSRF (Retido)": 54.3,
-                    "IRRF (Retido)": 4.5,
-                    "INSS (Retido)": 3.0,
-                    "ISSQN (Retido)": 0.1,
+                    "CSRF (Retido)": 5.43,
+                    "IRRF (Retido)": 0.45,
+                    "INSS (Retido)": 0.3,
+                    "ISSQN (Retido)": 0.01,
                     "lancado": false,
                     "concluido": false,
                     "sem_notas": false,
                     "dispensado": false
-                }
+                },
+                "status": "Finalizado"
             },
             "2025-08": {
                 "faturamento": {
