@@ -2,6 +2,8 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from app.utils import carregar_dados, salvar_dados, login_required
 from app.pdf_parser import extrair_dados_pdf
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 dp_bp = Blueprint('dp', __name__)
 
@@ -52,7 +54,6 @@ def upload_dp():
                         dados_gerais[nome_empresa]['periodos'][periodo] = {}
                     
                     dados_gerais[nome_empresa]['periodos'][periodo]['departamento_pessoal'] = dados_extraidos
-                    # Ao carregar o PDF, o status do DP é automaticamente definido como Finalizado.
                     dados_gerais[nome_empresa]['periodos'][periodo]['dp_status'] = 'Finalizado'
                     
                     sucesso_count += 1
@@ -86,11 +87,29 @@ def dados_dp(nome_empresa, periodo):
     dados_dp_especifico = dados_periodo.get('departamento_pessoal')
     status_dp = dados_periodo.get('dp_status', 'Em Aberto')
     
+    aniversariantes = []
+    if dados_dp_especifico and 'COLABORADORES' in dados_dp_especifico:
+        try:
+            data_relatorio = datetime.strptime(periodo, "%Y-%m")
+            proximo_mes_data = data_relatorio + relativedelta(months=1)
+            proximo_mes_numero = proximo_mes_data.month
+
+            for col in dados_dp_especifico['COLABORADORES']:
+                if col.get('admissao'):
+                    data_admissao = datetime.strptime(col['admissao'], "%d/%m/%Y")
+                    if data_admissao.month == proximo_mes_numero:
+                        anos_de_casa = proximo_mes_data.year - data_admissao.year
+                        if anos_de_casa > 0:
+                            aniversariantes.append({"nome": col['nome'], "anos": anos_de_casa})
+        except (ValueError, TypeError) as e:
+            print(f"Erro ao processar datas para aniversariantes: {e}")
+
     return render_template('dados_dp.html', 
                            nome_empresa=nome_empresa, 
                            periodo=periodo,
                            dados_dp=dados_dp_especifico,
-                           status_dp=status_dp)
+                           status_dp=status_dp,
+                           aniversariantes=aniversariantes)
 
 @dp_bp.route('/delete_dp_data/<path:nome_empresa>/<periodo>', methods=['POST'])
 @login_required
@@ -100,15 +119,14 @@ def delete_dp_data(nome_empresa, periodo):
     
     periodos = dados_gerais.get(nome_empresa, {}).get('periodos', {})
     if periodo in periodos:
-        # Remove a chave 'departamento_pessoal'
         if 'departamento_pessoal' in periodos[periodo]:
             del periodos[periodo]['departamento_pessoal']
-            periodos[periodo]['dp_status'] = 'Em Aberto'
-            salvar_dados(dados_gerais)
-            flash('Dados de DP excluídos com sucesso!', 'success')
-        else:
-            flash('Nenhum dado de DP encontrado para este período.', 'warning')
+        
+        periodos[periodo]['dp_status'] = 'Em Aberto'
+        
+        salvar_dados(dados_gerais)
+        flash('Dados do Departamento Pessoal para este mês foram excluídos com sucesso.', 'success')
     else:
-        flash('Período não encontrado.', 'warning')
-
+        flash('Período não encontrado para exclusão.', 'warning')
+        
     return redirect(url_for('dp.dados_dp', nome_empresa=nome_empresa, periodo=periodo))

@@ -1,8 +1,10 @@
 # app/dashboard/routes.py
+import re
 from flask import Blueprint, render_template, request, jsonify
 from app.utils import carregar_dados, para_float, login_required
 from datetime import datetime
 from dateutil.rrule import rrule, MONTHLY
+from dateutil.relativedelta import relativedelta
 
 dashboard_bp = Blueprint('dashboard', __name__, template_folder='templates')
 
@@ -27,17 +29,26 @@ def view_dashboard(nome_empresa, periodo):
         data = [para_float(v) for k, v in dados_filtrados.items() if k not in campos_nao_grafico and para_float(v) > 0]
         return {'labels': labels, 'data': data}
 
+    # --- Consolidação dos dados de Faturamento ---
     faturamento_original = dados_periodo.get('faturamento', {})
-    valor_servicos = para_float(faturamento_original.get('Serviços tributados')) + para_float(faturamento_original.get('Serviços retidos'))
-    valor_revenda = para_float(faturamento_original.get('Revenda mercadorias tributadas')) + para_float(faturamento_original.get('Revenda mercadorias não tributárias')) + para_float(faturamento_original.get('Revenda de mercadoria monofásica'))
+    
+    valor_servicos = para_float(faturamento_original.get('Serviços tributados')) + \
+                     para_float(faturamento_original.get('Serviços retidos'))
+
+    valor_revenda = para_float(faturamento_original.get('Revenda mercadorias tributadas')) + \
+                    para_float(faturamento_original.get('Revenda mercadorias não tributárias')) + \
+                    para_float(faturamento_original.get('Revenda de mercadoria monofásica'))
+
     faturamento_consolidado = {
         "SERVIÇOS": valor_servicos,
         "REVENDA DE MERCADORIAS": valor_revenda,
         "VENDA (INDÚSTRIA/IMÓVEIS)": para_float(faturamento_original.get('Venda (indústria/imóveis)')),
         "LOCAÇÃO": para_float(faturamento_original.get('Locação')),
-        "RECEITA SEM NOTA FISCAL": para_float(faturamento_original.get('Receita sem nota fiscal'))
+        # NOME CORRIGIDO AQUI PARA USAR O NOVO CAMPO DO CONFIG.PY
+        "OUTRAS RECEITAS": para_float(faturamento_original.get('Outras receitas'))
     }
 
+    # --- Preparação dos Gráficos ---
     fiscal_charts = [
         {"title": "Faturamento", "data": preparar_dados_grafico(faturamento_consolidado), "id": "chartFaturamento"},
         {"title": "Despesas", "data": preparar_dados_grafico(dados_periodo.get('despesas')), "id": "chartDespesas"},
@@ -52,23 +63,26 @@ def view_dashboard(nome_empresa, periodo):
     if dp_data:
         if 'VALOR_GFD_MENSAL' in dp_data: dp_data['VALOR_FGTS_MENSAL'] = dp_data.pop('VALOR_GFD_MENSAL')
         if 'VALOR_GFD_RESCISORIA' in dp_data: dp_data['VALOR_FGTS_RESCISORIA'] = dp_data.pop('VALOR_GFD_RESCISORIA')
+        if 'VALOR_GPS' in dp_data: dp_data['INSS'] = dp_data.pop('VALOR_GPS')
             
-    dp_keys = ['LIQUIDO_COLABORADORES', 'LIQUIDO_EMPREGADORES', 'VALOR_GPS', 'VALOR_FGTS_MENSAL', 'VALOR_FGTS_RESCISORIA']
+    dp_keys = ['LIQUIDO_COLABORADORES', 'LIQUIDO_EMPREGADORES', 'INSS', 'VALOR_FGTS_MENSAL', 'VALOR_FGTS_RESCISORIA']
     dp_chart_data = preparar_dados_grafico(dp_data, dp_keys)
     dp_chart = {"title": "Valores Departamento Pessoal", "data": dp_chart_data, "id": "chartDP"} if dp_chart_data['data'] else None
 
+    # --- Cálculo dos Resumos com Lucro Líquido ---
     liquido_colaboradores = para_float(dp_data.get('LIQUIDO_COLABORADORES'))
     liquido_empregadores = para_float(dp_data.get('LIQUIDO_EMPREGADORES'))
-    valor_gps = para_float(dp_data.get('VALOR_GPS'))
+    valor_inss = para_float(dp_data.get('INSS'))
     valor_fgts_mensal = para_float(dp_data.get('VALOR_FGTS_MENSAL'))
     valor_fgts_rescisoria = para_float(dp_data.get('VALOR_FGTS_RESCISORIA'))
+
     total_faturamento = sum(para_float(v) for k, v in faturamento_original.items() if k not in campos_nao_grafico)
     total_despesas_fiscal = sum(para_float(v) for k, v in dados_periodo.get('despesas', {}).items() if k not in campos_nao_grafico)
     total_impostos_fiscal = sum(para_float(v) for k, v in dados_periodo.get('impostos_federal', {}).items() if k not in campos_nao_grafico) + \
                             sum(para_float(v) for k, v in dados_periodo.get('impostos_estadual', {}).items() if k not in campos_nao_grafico) + \
                             sum(para_float(v) for k, v in dados_periodo.get('impostos_municipal', {}).items() if k not in campos_nao_grafico)
 
-    total_impostos_geral = total_impostos_fiscal + valor_gps + valor_fgts_mensal + valor_fgts_rescisoria
+    total_impostos_geral = total_impostos_fiscal + valor_inss + valor_fgts_mensal + valor_fgts_rescisoria
     total_despesas_e_custos = total_despesas_fiscal + liquido_colaboradores + liquido_empregadores
     lucro_liquido = total_faturamento - total_despesas_e_custos - total_impostos_geral
 
@@ -80,8 +94,29 @@ def view_dashboard(nome_empresa, periodo):
     }
     
     situacao_colaboradores = dp_data.get('SITUACAO_COLABORADORES')
+    if situacao_colaboradores:
+        situacao_colaboradores = situacao_colaboradores.replace('Doença:', 'Afastados:')
+        situacao_colaboradores = re.sub(r'\s*Militar: \d+', '', situacao_colaboradores)
+        situacao_colaboradores = re.sub(r'\s*Outras sit\.: \d+', '', situacao_colaboradores)
+        
     colaboradores = dp_data.get('COLABORADORES', [])
     
+    aniversariantes = []
+    if colaboradores:
+        try:
+            data_relatorio = datetime.strptime(periodo, "%Y-%m")
+            proximo_mes_data = data_relatorio + relativedelta(months=1)
+            proximo_mes_numero = proximo_mes_data.month
+            for col in colaboradores:
+                if col.get('admissao'):
+                    data_admissao = datetime.strptime(col['admissao'], "%d/%m/%Y")
+                    if data_admissao.month == proximo_mes_numero:
+                        anos_de_casa = proximo_mes_data.year - data_admissao.year
+                        if anos_de_casa > 0:
+                            aniversariantes.append({"nome": col['nome'], "anos": anos_de_casa})
+        except (ValueError, TypeError) as e:
+            print(f"Erro ao processar datas para aniversariantes: {e}")
+
     anos = [str(i) for i in range(2023, datetime.now().year + 2)]
     meses = [f"{i:02d}" for i in range(1, 13)]
 
@@ -90,7 +125,7 @@ def view_dashboard(nome_empresa, periodo):
         nome_empresa=nome_empresa, periodo=periodo, dados_empresa=dados_empresa,
         fiscal_charts=fiscal_charts_filtrados, dp_chart=dp_chart, resumo_fiscal=resumo_fiscal,
         situacao_colaboradores=situacao_colaboradores, colaboradores=colaboradores,
-        anos=anos, meses=meses
+        anos=anos, meses=meses, aniversariantes=aniversariantes
     )
 
 @dashboard_bp.route('/api/comparativo_data')

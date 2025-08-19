@@ -26,7 +26,7 @@
             <div class="card-body p-2">
                 <div class="row align-items-center g-2">
                     <div class="col-md-7 d-flex align-items-center">
-                        <div style="position: relative; width: 100%; height: 160px;">
+                        <div style="position: relative; width: 100%; height: 250px;">
                             <canvas id="{{ chart_id }}"></canvas>
                         </div>
                     </div>
@@ -64,16 +64,16 @@
     <div id="capture-page-1">
         <div class="d-flex justify-content-between align-items-center mt-3 mb-4">
             <div>
-                <h3><i class="bi bi-pie-chart-fill"></i> Dashboard Unificado: <strong>{{ nome_empresa }}</strong></h3>
+                <h3><i class="bi bi-pie-chart-fill"></i> Dashboard Mensal: <strong>{{ nome_empresa | upper }}</strong></h3>
                 {% if dados_empresa.cnpj %}
                     <h6 class="text-body-secondary fw-normal">{{ dados_empresa.cnpj }}</h6>
                 {% endif %}
+                <p class="lead fs-5 mt-3">Olá, <strong>{{ nome_empresa | upper }}</strong>, segue suas métricas do mês {{ periodo.split('-')[1] }}/{{ periodo.split('-')[0] }}.</p>
             </div>
-            <span class="badge bg-secondary fs-6">Período: {{ periodo.split('-')[1] }}/{{ periodo.split('-')[0] }}</span>
-        </div>
+            </div>
         <div class="card mb-4">
             <div class="card-body">
-                <h4 class="card-title"><i class="bi bi-calculator"></i> Resumo Fiscal</h4>
+                <h4 class="card-title"><i class="bi bi-calculator"></i> Resumo Mensal</h4>
                 <div class="list-group list-group-flush">
                     <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                         <span class="fs-5">Total Faturamento</span>
@@ -129,7 +129,7 @@
                     <hr>
                 {% endif %}
                 <div class="row mt-3">
-                    <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="col-md-3 mb-3 mb-md-0">
                         <h6 class="text-warning"><i class="bi bi-sun-fill"></i> Férias</h6>
                         <ul class="list-group list-group-flush">
                             {% set found = namespace(value=false) %}
@@ -142,7 +142,7 @@
                             {% endif %}
                         </ul>
                     </div>
-                    <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="col-md-3 mb-3 mb-md-0">
                         <h6 class="text-danger"><i class="bi bi-bandaid-fill"></i> Afastados</h6>
                         <ul class="list-group list-group-flush">
                             {% set found = namespace(value=false) %}
@@ -155,7 +155,7 @@
                             {% endif %}
                         </ul>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3 mb-3 mb-md-0">
                         <h6 class="text-info"><i class="bi bi-person-arms-up"></i> Licença Maternidade</h6>
                         <ul class="list-group list-group-flush">
                             {% set found = namespace(value=false) %}
@@ -165,6 +165,18 @@
                             {% endfor %}
                             {% if not found.value %}
                                  <li class="list-group-item px-0 py-1 text-body-secondary fst-italic">Nenhuma funcionária.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-primary"><i class="bi bi-gift-fill"></i> Aniversariantes (Próx. Mês)</h6>
+                        <ul class="list-group list-group-flush">
+                            {% if aniversariantes %}
+                                {% for aniv in aniversariantes %}
+                                    <li class="list-group-item px-0 py-1">{{ aniv.nome }} <small class="text-body-secondary">({{ aniv.anos }} anos)</small></li>
+                                {% endfor %}
+                            {% else %}
+                                 <li class="list-group-item px-0 py-1 text-body-secondary fst-italic">Nenhum.</li>
                             {% endif %}
                         </ul>
                     </div>
@@ -224,170 +236,234 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    
-    // --- LÓGICA DOS GRÁFICOS DE PIZZA (DONUT) ---
-    function renderizarGraficosPizza() {
-        try {
-            const centerTextPlugin = {
-                id: 'centerText',
-                afterDraw: function(chart) {
-                    if (chart.config.type === 'doughnut' && chart.config.options.plugins.centerText.enabled) {
-                        const ctx = chart.ctx;
-                        const total = chart.config.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        const text = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        ctx.save();
-                        const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
-                        const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
-                        ctx.font = 'bold 0.8rem sans-serif';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillStyle = document.documentElement.dataset.bsTheme === 'dark' ? '#fff' : '#495057';
-                        ctx.fillText(text, centerX, centerY);
-                        ctx.restore();
-                    }
-                }
-            };
-            Chart.register(centerTextPlugin);
-
-            function createDoughnutChart(canvasId, chartData, chartTitle) {
-                const ctx = document.getElementById(canvasId).getContext('2d');
-                const hasData = chartData && chartData.data && chartData.data.length > 0 && chartData.data.some(d => d > 0);
-                let palette;
-                const lowerCaseTitle = chartTitle.toLowerCase();
-
-                if (lowerCaseTitle.includes('faturamento')) { palette = ['#28a745', '#218838', '#1e7e34', '#155724', '#10431b', '#0b2e13']; } 
-                else if (lowerCaseTitle.includes('despesas')) { palette = ['#dc3545', '#c82333', '#bd2130', '#a71d2a', '#921824', '#7c131e']; }
-                else if (lowerCaseTitle.includes('impostos')) { palette = ['#fd7e14', '#f57302', '#e06800', '#c95e00', '#b35400', '#9c4900']; }
-                else if (lowerCaseTitle.includes('retenções') || lowerCaseTitle.includes('pessoal')) { palette = ['#6c757d', '#5a6268', '#4e555b', '#3d4246', '#2d3135', '#212529']; }
-                else { palette = ['#0d6efd', '#0b5ed7', '#0a58ca', '#0951bd', '#084ab5']; }
-
-                new Chart(ctx, {
-                    type: 'doughnut', data: { labels: hasData ? chartData.labels : ['Sem Dados'], datasets: [{ data: hasData ? chartData.data : [1], backgroundColor: hasData ? palette : ['#e9ecef'], borderColor: document.documentElement.dataset.bsTheme === 'dark' ? '#343a40' : '#fff', borderWidth: 2 }] },
-                    options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { display: false }, tooltip: { enabled: hasData }, centerText: { enabled: hasData } } }
-                });
+    const centerTextPlugin = {
+        id: 'centerText',
+        afterDraw: function(chart) {
+            if (chart.config.type === 'doughnut' && chart.config.options.plugins.centerText.enabled) {
+                const ctx = chart.ctx;
+                const total = chart.config.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                const text = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                ctx.save();
+                const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+                const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+                ctx.font = 'bold 0.8rem sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = document.documentElement.dataset.bsTheme === 'dark' ? '#fff' : '#495057';
+                ctx.fillText(text, centerX, centerY);
+                ctx.restore();
             }
-
-            const fiscalCharts = {{ fiscal_charts | tojson }};
-            const dpChart = {{ dp_chart | tojson }};
-            
-            fiscalCharts.forEach(chart => { if (document.getElementById(chart.id)) createDoughnutChart(chart.id, chart.data, chart.title); });
-            if (dpChart && document.getElementById(dpChart.id)) { createDoughnutChart(dpChart.id, dpChart.data, dpChart.title); }
-            console.log("Gráficos de pizza renderizados com sucesso.");
-        } catch (e) {
-            console.error("Erro ao renderizar gráficos de pizza:", e);
         }
-    }
+    };
+    Chart.register(centerTextPlugin);
 
-    // --- LÓGICA DO COMPARATIVO ---
-    function inicializarComparativo() {
-        try {
-            const gerarComparativoBtn = document.getElementById('gerar-comparativo-btn');
-            const comparativoContainer = document.getElementById('capture-page-3');
-            const loadingSpinner = document.getElementById('loading-spinner');
-            const modalElement = document.getElementById('comparativoModal');
-            const modal = new bootstrap.Modal(modalElement);
-            let chartFinanceiro, chartImpostos;
+    function createDoughnutChart(canvasId, chartData, chartTitle) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const hasData = chartData && chartData.data && chartData.data.length > 0 && chartData.data.some(d => d > 0);
+        let palette;
+        const lowerCaseTitle = chartTitle.toLowerCase();
 
-            gerarComparativoBtn.addEventListener('click', function() {
-                const nomeEmpresa = "{{ nome_empresa }}";
-                const periodoInicio = document.getElementById('periodo-inicio-select').value;
-                const periodoFim = document.getElementById('periodo-fim-select').value;
-                if (!periodoInicio || !periodoFim) { alert('Por favor, preencha todos os campos.'); return; }
-                
-                loadingSpinner.classList.remove('d-none');
-                gerarComparativoBtn.disabled = true;
-                const url = `/api/comparativo_data?nome_empresa=${encodeURIComponent(nomeEmpresa)}&periodo_inicio=${periodoInicio}&periodo_fim=${periodoFim}`;
-
-                fetch(url)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.erro) throw new Error(data.erro);
-                        if (data.labels.length === 0) {
-                            alert('Nenhum mês finalizado encontrado no período selecionado.');
-                            comparativoContainer.classList.add('d-none');
-                            return;
-                        }
-
-                        if (chartFinanceiro) chartFinanceiro.destroy();
-                        if (chartImpostos) chartImpostos.destroy();
-
-                        const ctx1 = document.getElementById('graficoEvolucaoFinanceira').getContext('2d');
-                        chartFinanceiro = new Chart(ctx1, { type: 'line', data: { labels: data.labels, datasets: [{ label: 'Total de Receitas', data: data.grafico1.receitas, borderColor: 'green', tension: 0.1 }, { label: 'Despesas + Custos', data: data.grafico1.despesas, borderColor: 'red', tension: 0.1 }, { label: 'Lucro Líquido', data: data.grafico1.lucro, borderColor: 'blue', tension: 0.1 }]}, options: { plugins: { title: { display: true, text: 'Evolução de Receitas, Despesas e Lucro' } } } });
-                        const ctx2 = document.getElementById('graficoEvolucaoImpostos').getContext('2d');
-                        chartImpostos = new Chart(ctx2, { type: 'line', data: { labels: data.labels, datasets: [{ label: 'Impostos Federais', data: data.grafico2.federais, borderColor: '#0d6efd', tension: 0.1 }, { label: 'Impostos Estaduais', data: data.grafico2.estaduais, borderColor: '#ffc107', tension: 0.1 }, { label: 'Impostos Municipais', data: data.grafico2.municipais, borderColor: '#6f42c1', tension: 0.1 }, { label: 'Retenções Federais', data: data.grafico2.retencoes, borderColor: '#17a2b8', tension: 0.1 }]}, options: { plugins: { title: { display: true, text: 'Evolução de Impostos e Retenções' } } } });
-                        
-                        comparativoContainer.classList.remove('d-none');
-                        modal.hide();
-                    })
-                    .catch(error => alert('Erro ao buscar os dados: ' + error.message))
-                    .finally(() => {
-                        loadingSpinner.classList.add('d-none');
-                        gerarComparativoBtn.disabled = false;
-                    });
-            });
-            console.log("Funcionalidade do comparativo inicializada.");
-        } catch(e) {
-            console.error("Erro ao inicializar o comparativo:", e);
+        if (lowerCaseTitle.includes('faturamento')) {
+            palette = ['#28a745', '#198754', '#0d6efd', '#0dcaf0', '#20c997'];
+        } else if (lowerCaseTitle.includes('despesas')) {
+            palette = ['#dc3545', '#fd7e14', '#ffc107', '#f24236', '#f56a02' ];
+        } else if (lowerCaseTitle.includes('impostos')) {
+            palette = ['#6f42c1', '#5c636a', '#495057', '#0b5ed7', '#343a40'];
+        } else if (lowerCaseTitle.includes('retenções') || lowerCaseTitle.includes('pessoal')) {
+            palette = ['#6c757d', '#adb5bd', '#495057', '#ced4da', '#212529'];
+        } else {
+            palette = ['#0d6efd', '#6c757d', '#198754', '#ffc107', '#dc3545'];
         }
-    }
 
-    // --- LÓGICA DO PDF ---
-    function inicializarPDF() {
-        try {
-            const pdfButton = document.getElementById('generate-pdf-btn');
-            pdfButton.addEventListener('click', async () => {
-                pdfButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Iniciando...';
-                pdfButton.disabled = true;
-
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const options = { scale: 1.5, useCORS: true, onclone: (doc) => { doc.body.dataset.bsTheme = 'light'; } };
-
-                const addImageToPdf = (canvas, isFirstPage) => {
-                    const imgData = canvas.toDataURL('image/png');
-                    const imgWidth = pdfWidth * 0.95;
-                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                    const xOffset = (pdfWidth - imgWidth) / 2;
-                    const yOffset = 10;
-                    if (!isFirstPage) pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgWidth, imgHeight);
-                };
-                
-                const page1 = document.getElementById('capture-page-1');
-                pdfButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processando Página 1...';
-                const canvas1 = await html2canvas(page1, options);
-                addImageToPdf(canvas1, true);
-
-                const page2 = document.getElementById('capture-page-2');
-                pdfButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processando Página 2...';
-                const canvas2 = await html2canvas(page2, options);
-                addImageToPdf(canvas2, false);
-
-                const page3 = document.getElementById('capture-page-3');
-                if (!page3.classList.contains('d-none')) {
-                    pdfButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processando Comparativo...';
-                    const canvas3 = await html2canvas(page3, options);
-                    addImageToPdf(canvas3, false);
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: hasData ? chartData.labels : ['Sem Dados'],
+                datasets: [{
+                    data: hasData ? chartData.data : [1],
+                    backgroundColor: hasData ? palette : ['#e9ecef'],
+                    borderColor: document.documentElement.dataset.bsTheme === 'dark' ? '#343a40' : '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%', 
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: hasData },
+                    centerText: { enabled: hasData }
                 }
-                
-                pdfButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Montando o PDF...';
-                pdf.save(`dashboard-unificado-{{ nome_empresa }}-{{ periodo }}.pdf`);
-                pdfButton.innerHTML = '<i class="bi bi-file-earmark-pdf-fill"></i> Gerar PDF';
-                pdfButton.disabled = false;
-            });
-            console.log("Funcionalidade do PDF inicializada.");
-        } catch(e) {
-            console.error("Erro ao inicializar o PDF:", e);
-        }
+            }
+        });
     }
 
-    // --- EXECUÇÃO PRINCIPAL ---
-    renderizarGraficosPizza();
-    inicializarComparativo();
-    inicializarPDF();
+    const fiscalCharts = {{ fiscal_charts | tojson }};
+    const dpChart = {{ dp_chart | tojson }};
+
+    fiscalCharts.forEach(chart => {
+        if (document.getElementById(chart.id)) {
+            createDoughnutChart(chart.id, chart.data, chart.title);
+        }
+    });
+
+    if (dpChart && document.getElementById(dpChart.id)) {
+        createDoughnutChart(dpChart.id, dpChart.data, dpChart.title);
+    }
+
+    const gerarComparativoBtn = document.getElementById('gerar-comparativo-btn');
+    const comparativoContainer = document.getElementById('capture-page-3');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const modalElement = document.getElementById('comparativoModal');
+    const modal = new bootstrap.Modal(modalElement);
+    let chartFinanceiro, chartImpostos;
+
+    gerarComparativoBtn.addEventListener('click', function() {
+        const nomeEmpresa = "{{ nome_empresa }}";
+        const periodoInicio = document.getElementById('periodo-inicio-select').value;
+        const periodoFim = document.getElementById('periodo-fim-select').value;
+        if (!periodoInicio || !periodoFim) {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
+        loadingSpinner.classList.remove('d-none');
+        gerarComparativoBtn.disabled = true;
+        const url = `/api/comparativo_data?nome_empresa=${encodeURIComponent(nomeEmpresa)}&periodo_inicio=${periodoInicio}&periodo_fim=${periodoFim}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) throw new Error(data.erro);
+                if (data.labels.length === 0) {
+                    alert('Nenhum mês finalizado encontrado no período selecionado.');
+                    comparativoContainer.classList.add('d-none');
+                    return;
+                }
+                if (chartFinanceiro) chartFinanceiro.destroy();
+                if (chartImpostos) chartImpostos.destroy();
+
+                const fontColor = document.documentElement.dataset.bsTheme === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.9)';
+
+                const ctx1 = document.getElementById('graficoEvolucaoFinanceira').getContext('2d');
+                chartFinanceiro = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            { label: 'Total de Receitas', data: data.grafico1.receitas, borderColor: 'green', tension: 0.1 },
+                            { label: 'Despesas + Custos', data: data.grafico1.despesas, borderColor: 'red', tension: 0.1 },
+                            { label: 'Lucro Líquido', data: data.grafico1.lucro, borderColor: 'blue', tension: 0.1 }
+                        ]
+                    },
+                    // --- OPÇÕES DE ESTILO ADICIONADAS ---
+                    options: {
+                        plugins: {
+                            title: { display: true, text: 'Evolução de Receitas, Despesas e Lucro', color: fontColor, font: { size: 16 } },
+                            legend: { labels: { color: fontColor, font: { size: 14 } } }
+                        },
+                        scales: {
+                            y: { ticks: { color: fontColor, font: { size: 12 } } },
+                            x: { ticks: { color: fontColor, font: { size: 12 } } }
+                        }
+                    }
+                });
+
+                const ctx2 = document.getElementById('graficoEvolucaoImpostos').getContext('2d');
+                chartImpostos = new Chart(ctx2, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            { label: 'Impostos Federais', data: data.grafico2.federais, borderColor: '#0d6efd', tension: 0.1 },
+                            { label: 'Impostos Estaduais', data: data.grafico2.estaduais, borderColor: '#ffc107', tension: 0.1 },
+                            { label: 'Impostos Municipais', data: data.grafico2.municipais, borderColor: '#6f42c1', tension: 0.1 },
+                            { label: 'Retenções Federais', data: data.grafico2.retencoes, borderColor: '#17a2b8', tension: 0.1 }
+                        ]
+                    },
+                    // --- OPÇÕES DE ESTILO ADICIONADAS ---
+                    options: {
+                        plugins: {
+                            title: { display: true, text: 'Evolução de Impostos e Retenções', color: fontColor, font: { size: 16 } },
+                            legend: { labels: { color: fontColor, font: { size: 14 } } }
+                        },
+                        scales: {
+                            y: { ticks: { color: fontColor, font: { size: 12 } } },
+                            x: { ticks: { color: fontColor, font: { size: 12 } } }
+                        }
+                    }
+                });
+                
+                comparativoContainer.classList.remove('d-none');
+                modal.hide();
+            })
+            .catch(error => alert('Erro ao buscar os dados: ' + error.message))
+            .finally(() => {
+                loadingSpinner.classList.add('d-none');
+                gerarComparativoBtn.disabled = false;
+            });
+    });
+
+    const pdfButton = document.getElementById('generate-pdf-btn');
+    const page1 = document.getElementById('capture-page-1');
+    const page2 = document.getElementById('capture-page-2');
+    const page3 = document.getElementById('capture-page-3');
+
+    pdfButton.addEventListener('click', async () => {
+        pdfButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Iniciando...';
+        pdfButton.disabled = true;
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        
+        const options = {
+            scale: 2,
+            useCORS: true,
+            onclone: (doc) => {
+                doc.body.dataset.bsTheme = 'light';
+            }
+        };
+
+        const addImageToPdf = (canvas, isFirstPage) => {
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = pdfWidth * 0.95;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            const xOffset = (pdfWidth - imgWidth) / 2;
+            const yOffset = 10;
+            
+            if (!isFirstPage) {
+                pdf.addPage();
+            }
+            pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgWidth, imgHeight);
+        };
+
+        pdfButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processando Página 1/2...';
+        const canvas1 = await html2canvas(page1, options);
+        addImageToPdf(canvas1, true);
+
+        pdfButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processando Página 2/2...';
+        const canvas2 = await html2canvas(page2, options);
+        addImageToPdf(canvas2, false);
+
+        if (!page3.classList.contains('d-none')) {
+            pdfButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processando Comparativo...';
+            const canvas3 = await html2canvas(page3, options);
+            addImageToPdf(canvas3, false);
+        }
+        
+        pdfButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Montando o PDF...';
+        
+        pdf.save(`dashboard-unificado-{{ nome_empresa }}-{{ periodo }}.pdf`);
+        
+        pdfButton.innerHTML = '<i class="bi bi-file-earmark-pdf-fill"></i> Gerar PDF';
+        pdfButton.disabled = false;
+    });
 });
 </script>
 {% endblock %}

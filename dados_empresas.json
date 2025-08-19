@@ -163,13 +163,13 @@
             "2025-08": {
                 "faturamento": {
                     "Serviços tributados": 123.23,
-                    "Serviços retidos": 0.0,
+                    "Serviços retidos": 4.34,
                     "Venda (indústria/imóveis)": 21321.33,
-                    "Revenda mercadorias tributadas": 0.0,
-                    "Revenda mercadorias não tributadas": 0.0,
-                    "Revenda de mercadoria monofásica": 0.0,
-                    "Locação": 0.0,
-                    "Receita sem nota fiscal": 0.0,
+                    "Revenda mercadorias tributadas": 3.42,
+                    "Revenda mercadorias não tributárias": 34323.43,
+                    "Revenda de mercadoria monofásica": 34.34,
+                    "Locação": 31.23,
+                    "Outras receitas": 333.33,
                     "lancado": false,
                     "concluido": false
                 },
@@ -215,7 +215,8 @@
                     "concluido": false,
                     "sem_notas": false,
                     "dispensado": false
-                }
+                },
+                "status": "Finalizado"
             }
         }
     },
@@ -549,6 +550,63 @@
         "active": true,
         "periodos": {
             "2025-07": {
+                "dp_status": "Finalizado",
+                "faturamento": {
+                    "Serviços tributados": 428.34,
+                    "Serviços retidos": 422.23,
+                    "Venda (indústria/imóveis)": 65112.54,
+                    "Revenda mercadorias tributadas": 6332.56,
+                    "Revenda mercadorias não tributárias": 30000.32,
+                    "Revenda de mercadoria monofásica": 623.46,
+                    "Locação": 3430.65,
+                    "Outras receitas": 232.13,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "despesas": {
+                    "Compras para revenda": 25.43,
+                    "Compras para uso/consumo": 230.45,
+                    "Compras para ativo imobilizado": 212.45,
+                    "Serviços tomados com nota fiscal": 331.23
+                },
+                "impostos_federal": {
+                    "Simples": 120.54,
+                    "PIS": 121.22,
+                    "COFINS": 66.55,
+                    "IRPJ": 6.54,
+                    "CSLL": 7.66,
+                    "IOF": 6.54,
+                    "IPI": 0.12,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_estadual": {
+                    "ICMS próprio": 123.23,
+                    "ICMS ST próprio": 26.51,
+                    "DIFAL": 3.24,
+                    "Antecipação": 120.23,
+                    "ICMS ST Entradas": 67.54,
+                    "FEM": 12.32,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "impostos_municipal": {
+                    "ISSQN a pagar": 6.54,
+                    "ISSQN Retido (NF própria)": 120.45,
+                    "lancado": false,
+                    "concluido": false
+                },
+                "retencoes_federal": {
+                    "CSRF (Retido)": 5.43,
+                    "IRRF (Retido)": 0.45,
+                    "INSS (Retido)": 0.03,
+                    "ISSQN (Retido)": 0.01,
+                    "lancado": false,
+                    "concluido": false,
+                    "sem_notas": false,
+                    "dispensado": false
+                },
+                "status": "Finalizado",
                 "departamento_pessoal": {
                     "CNPJ": "11.371.839/0001-52",
                     "PERIODO": "2025-07",
@@ -840,64 +898,7 @@
                     "VALOR_GPS": "R$ 52.471,10",
                     "VALOR_GFD_MENSAL": "R$ 11.733,30",
                     "VALOR_GFD_RESCISORIA": "R$ 4.748,00"
-                },
-                "dp_status": "Finalizado",
-                "faturamento": {
-                    "Serviços tributados": 42.34,
-                    "Serviços retidos": 4.23,
-                    "Venda (indústria/imóveis)": 5.54,
-                    "Revenda mercadorias tributadas": 6.56,
-                    "Revenda mercadorias não tributadas": 66.65,
-                    "Revenda de mercadoria monofásica": 6.65,
-                    "Locação": 0.65,
-                    "Receita sem nota fiscal": 456.43,
-                    "lancado": false,
-                    "concluido": false
-                },
-                "despesas": {
-                    "Compras para revenda": 25.43,
-                    "Compras para uso/consumo": 0.45,
-                    "Compras para ativo imobilizado": 5.45,
-                    "Serviços tomados com nota fiscal": 12.3
-                },
-                "impostos_federal": {
-                    "Simples": 0.54,
-                    "PIS": 12.2,
-                    "COFINS": 66.55,
-                    "IRPJ": 6.54,
-                    "CSLL": 7.66,
-                    "IOF": 6.54,
-                    "IPI": 1.2,
-                    "lancado": false,
-                    "concluido": false
-                },
-                "impostos_estadual": {
-                    "ICMS próprio": 2.3,
-                    "ICMS ST próprio": 0.65,
-                    "DIFAL": 32.4,
-                    "Antecipação": 2.3,
-                    "ICMS ST Entradas": 67.54,
-                    "FEM": 2.3,
-                    "lancado": false,
-                    "concluido": false
-                },
-                "impostos_municipal": {
-                    "ISSQN a pagar": 6.54,
-                    "ISSQN Retido (NF própria)": 0.45,
-                    "lancado": false,
-                    "concluido": false
-                },
-                "retencoes_federal": {
-                    "CSRF (Retido)": 5.43,
-                    "IRRF (Retido)": 0.45,
-                    "INSS (Retido)": 0.3,
-                    "ISSQN (Retido)": 0.01,
-                    "lancado": false,
-                    "concluido": false,
-                    "sem_notas": false,
-                    "dispensado": false
-                },
-                "status": "Finalizado"
+                }
             },
             "2025-08": {
                 "faturamento": {

@@ -28,9 +28,9 @@
                     <p><strong>Situação dos Colaboradores:</strong><br>{{ dados_dp.SITUACAO_COLABORADORES or 'Não informado' }}</p>
                     <p><strong>Líquido Colaboradores:</strong><br>{{ dados_dp.LIQUIDO_COLABORADORES or 'Não informado' }}</p>
                     <p><strong>Líquido Empregadores:</strong><br>{{ dados_dp.LIQUIDO_EMPREGADORES or 'Não informado' }}</p>
-                    <p><strong>Valor GPS:</strong><br>{{ dados_dp.VALOR_GPS or 'Não informado' }}</p>
-                    <p><strong>Valor GFD Mensal:</strong><br>{{ dados_dp.VALOR_GFD_MENSAL or 'Não informado' }}</p>
-                    <p><strong>Valor GFD Rescisória:</strong><br>{{ dados_dp.VALOR_GFD_RESCISORIA or 'Não informado' }}</p>
+                    <p><strong>INSS:</strong><br>{{ dados_dp.get('INSS') or dados_dp.get('VALOR_GPS') or 'Não informado' }}</p>
+                    <p><strong>FGTS Mensal:</strong><br>{{ dados_dp.get('VALOR_FGTS_MENSAL') or dados_dp.get('VALOR_GFD_MENSAL') or 'Não informado' }}</p>
+                    <p><strong>FGTS Rescisória:</strong><br>{{ dados_dp.get('VALOR_FGTS_RESCISORIA') or dados_dp.get('VALOR_GFD_RESCISORIA') or 'Não informado' }}</p>
                 </div>
                 <div class="col-md-7">
                     <h5 class="card-title mb-3">Colaboradores (sem Pró-Labore)</h5>
@@ -82,7 +82,7 @@
 
 {% if dados_dp.COLABORADORES %}
 <div class="row g-3 my-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title mb-3"><i class="bi bi-sun-fill text-warning"></i> Férias</h5>
@@ -98,14 +98,13 @@
                         {% endif %}
                     {% endfor %}
                     {% if not ferias_encontradas.value %}
-                        <p class="text-body-secondary mb-0">Nenhum funcionário em férias neste período.</p>
+                        <p class="text-body-secondary mb-0">Nenhum funcionário em férias.</p>
                     {% endif %}
                 </ul>
             </div>
         </div>
     </div>
-
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title mb-3"><i class="bi bi-bandaid-fill text-danger"></i> Afastados</h5>
@@ -121,14 +120,13 @@
                         {% endif %}
                     {% endfor %}
                     {% if not afastados_encontrados.value %}
-                        <p class="text-body-secondary mb-0">Nenhum funcionário afastado neste período.</p>
+                        <p class="text-body-secondary mb-0">Nenhum funcionário afastado.</p>
                     {% endif %}
                 </ul>
             </div>
         </div>
     </div>
-
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title mb-3"><i class="bi bi-person-arms-up text-info"></i> Licença Maternidade</h5>
@@ -144,7 +142,26 @@
                         {% endif %}
                     {% endfor %}
                     {% if not licenca_encontrada.value %}
-                        <p class="text-body-secondary mb-0">Nenhuma funcionária em licença maternidade.</p>
+                        <p class="text-body-secondary mb-0">Nenhuma funcionária em licença.</p>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-3"><i class="bi bi-gift-fill text-primary"></i> Aniversariantes (Próx. Mês)</h5>
+                <ul class="list-unstyled mb-0">
+                    {% if aniversariantes %}
+                        {% for aniv in aniversariantes %}
+                            <li class="mb-2">
+                                <strong>{{ aniv.nome }}</strong><br>
+                                <small class="text-body-secondary">Fará {{ aniv.anos }} ano(s) de casa</small>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-body-secondary mb-0">Nenhum aniversário no próximo mês.</p>
                     {% endif %}
                 </ul>
             </div>
