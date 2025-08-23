@@ -1,7 +1,9 @@
 Flask
-pandas
-openpyxl
-requests
-gunicorn
+Flask-SQLAlchemy
+psycopg2-binary
+python-dateutil
+werkzeug
 pdfplumber
-WeasyPrint
+openpyxl
+gunicorn
+pandas

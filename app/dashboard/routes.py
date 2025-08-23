@@ -1,7 +1,8 @@
 # app/dashboard/routes.py
 import re
 from flask import Blueprint, render_template, request, jsonify
-from app.utils import carregar_dados, para_float, login_required
+from app import db, Empresa, Periodo # Importa o db e os Modelos
+from app.utils import para_float, login_required
 from datetime import datetime
 from dateutil.rrule import rrule, MONTHLY
 from dateutil.relativedelta import relativedelta
@@ -12,10 +13,22 @@ dashboard_bp = Blueprint('dashboard', __name__, template_folder='templates')
 @login_required
 def view_dashboard(nome_empresa, periodo):
     """Exibe o dashboard unificado com dados Fiscais e de DP."""
-    dados_gerais = carregar_dados()
-    dados_empresa = dados_gerais.get(nome_empresa, {})
-    dados_periodo = dados_empresa.get('periodos', {}).get(periodo, {})
+    empresa = Empresa.query.filter_by(nome=nome_empresa).first_or_404()
+    periodo_obj = Periodo.query.filter_by(empresa_id=empresa.id, ano_mes=periodo).first()
 
+    # Se não houver dados para o período, inicializa com dicionários vazios
+    dados_periodo = {}
+    if periodo_obj:
+        dados_fiscais = periodo_obj.dados_fiscais or {}
+        dados_dp = periodo_obj.dados_dp or {}
+        dados_periodo['faturamento'] = dados_fiscais.get('faturamento', {})
+        dados_periodo['despesas'] = dados_fiscais.get('despesas', {})
+        dados_periodo['impostos_federal'] = dados_fiscais.get('impostos_federal', {})
+        dados_periodo['impostos_estadual'] = dados_fiscais.get('impostos_estadual', {})
+        dados_periodo['impostos_municipal'] = dados_fiscais.get('impostos_municipal', {})
+        dados_periodo['retencoes_federal'] = dados_fiscais.get('retencoes_federal', {})
+        dados_periodo['departamento_pessoal'] = dados_dp
+    
     campos_nao_grafico = {'lancado', 'concluido', 'sem_notas', 'dispensado'}
 
     def preparar_dados_grafico(dados_dict, chaves_filtro=None):
@@ -29,26 +42,17 @@ def view_dashboard(nome_empresa, periodo):
         data = [para_float(v) for k, v in dados_filtrados.items() if k not in campos_nao_grafico and para_float(v) > 0]
         return {'labels': labels, 'data': data}
 
-    # --- Consolidação dos dados de Faturamento ---
     faturamento_original = dados_periodo.get('faturamento', {})
-    
-    valor_servicos = para_float(faturamento_original.get('Serviços tributados')) + \
-                     para_float(faturamento_original.get('Serviços retidos'))
-
-    valor_revenda = para_float(faturamento_original.get('Revenda mercadorias tributadas')) + \
-                    para_float(faturamento_original.get('Revenda mercadorias não tributárias')) + \
-                    para_float(faturamento_original.get('Revenda de mercadoria monofásica'))
-
+    valor_servicos = para_float(faturamento_original.get('Serviços tributados')) + para_float(faturamento_original.get('Serviços retidos'))
+    valor_revenda = para_float(faturamento_original.get('Revenda mercadorias tributadas')) + para_float(faturamento_original.get('Revenda mercadorias não tributárias')) + para_float(faturamento_original.get('Revenda de mercadoria monofásica'))
     faturamento_consolidado = {
         "SERVIÇOS": valor_servicos,
         "REVENDA DE MERCADORIAS": valor_revenda,
         "VENDA (INDÚSTRIA/IMÓVEIS)": para_float(faturamento_original.get('Venda (indústria/imóveis)')),
         "LOCAÇÃO": para_float(faturamento_original.get('Locação')),
-        # NOME CORRIGIDO AQUI PARA USAR O NOVO CAMPO DO CONFIG.PY
         "OUTRAS RECEITAS": para_float(faturamento_original.get('Outras receitas'))
     }
 
-    # --- Preparação dos Gráficos ---
     fiscal_charts = [
         {"title": "Faturamento", "data": preparar_dados_grafico(faturamento_consolidado), "id": "chartFaturamento"},
         {"title": "Despesas", "data": preparar_dados_grafico(dados_periodo.get('despesas')), "id": "chartDespesas"},
@@ -69,13 +73,11 @@ def view_dashboard(nome_empresa, periodo):
     dp_chart_data = preparar_dados_grafico(dp_data, dp_keys)
     dp_chart = {"title": "Valores Departamento Pessoal", "data": dp_chart_data, "id": "chartDP"} if dp_chart_data['data'] else None
 
-    # --- Cálculo dos Resumos com Lucro Líquido ---
     liquido_colaboradores = para_float(dp_data.get('LIQUIDO_COLABORADORES'))
     liquido_empregadores = para_float(dp_data.get('LIQUIDO_EMPREGADORES'))
     valor_inss = para_float(dp_data.get('INSS'))
     valor_fgts_mensal = para_float(dp_data.get('VALOR_FGTS_MENSAL'))
     valor_fgts_rescisoria = para_float(dp_data.get('VALOR_FGTS_RESCISORIA'))
-
     total_faturamento = sum(para_float(v) for k, v in faturamento_original.items() if k not in campos_nao_grafico)
     total_despesas_fiscal = sum(para_float(v) for k, v in dados_periodo.get('despesas', {}).items() if k not in campos_nao_grafico)
     total_impostos_fiscal = sum(para_float(v) for k, v in dados_periodo.get('impostos_federal', {}).items() if k not in campos_nao_grafico) + \
@@ -86,13 +88,7 @@ def view_dashboard(nome_empresa, periodo):
     total_despesas_e_custos = total_despesas_fiscal + liquido_colaboradores + liquido_empregadores
     lucro_liquido = total_faturamento - total_despesas_e_custos - total_impostos_geral
 
-    resumo_fiscal = {
-        "total_faturamento": total_faturamento,
-        "total_despesas_e_custos": total_despesas_e_custos,
-        "total_impostos": total_impostos_geral,
-        "lucro_liquido": lucro_liquido
-    }
-    
+    resumo_fiscal = { "total_faturamento": total_faturamento, "total_despesas_e_custos": total_despesas_e_custos, "total_impostos": total_impostos_geral, "lucro_liquido": lucro_liquido }
     situacao_colaboradores = dp_data.get('SITUACAO_COLABORADORES')
     if situacao_colaboradores:
         situacao_colaboradores = situacao_colaboradores.replace('Doença:', 'Afastados:')
@@ -100,7 +96,6 @@ def view_dashboard(nome_empresa, periodo):
         situacao_colaboradores = re.sub(r'\s*Outras sit\.: \d+', '', situacao_colaboradores)
         
     colaboradores = dp_data.get('COLABORADORES', [])
-    
     aniversariantes = []
     if colaboradores:
         try:
@@ -122,7 +117,7 @@ def view_dashboard(nome_empresa, periodo):
 
     return render_template(
         'dashboard_page.html',
-        nome_empresa=nome_empresa, periodo=periodo, dados_empresa=dados_empresa,
+        nome_empresa=nome_empresa, periodo=periodo, dados_empresa=empresa,
         fiscal_charts=fiscal_charts_filtrados, dp_chart=dp_chart, resumo_fiscal=resumo_fiscal,
         situacao_colaboradores=situacao_colaboradores, colaboradores=colaboradores,
         anos=anos, meses=meses, aniversariantes=aniversariantes
@@ -138,30 +133,31 @@ def comparativo_data():
 
     if not all([nome_empresa, periodo_inicio, periodo_fim]):
         return jsonify({"erro": "Parâmetros inválidos"}), 400
+        
+    empresa = Empresa.query.filter_by(nome=nome_empresa).first()
+    if not empresa:
+        return jsonify({"erro": "Empresa não encontrada"}), 404
 
-    dados_gerais = carregar_dados()
-    periodos_empresa = dados_gerais.get(nome_empresa, {}).get('periodos', {})
-    
     try:
         start_date = datetime.strptime(periodo_inicio, "%Y-%m")
         end_date = datetime.strptime(periodo_fim, "%Y-%m")
     except ValueError:
         return jsonify({"erro": "Formato de data inválido. Use AAAA-MM."}), 400
     
-    labels = []
-    receitas_data, despesas_custos_data, lucro_liquido_data = [], [], []
+    labels, receitas_data, despesas_custos_data, lucro_liquido_data = [], [], [], []
     impostos_fed_data, impostos_est_data, impostos_mun_data, retencoes_fed_data = [], [], [], []
 
     for dt in rrule(MONTHLY, dtstart=start_date, until=end_date):
-        periodo = dt.strftime("%Y-%m")
-        dados_periodo = periodos_empresa.get(periodo, {})
+        periodo_str = dt.strftime("%Y-%m")
+        periodo_obj = Periodo.query.filter_by(empresa_id=empresa.id, ano_mes=periodo_str).first()
 
-        if dados_periodo and dados_periodo.get('status') == 'Finalizado' and dados_periodo.get('dp_status') == 'Finalizado':
+        if periodo_obj and periodo_obj.status == 'Finalizado' and periodo_obj.dp_status == 'Finalizado':
             labels.append(dt.strftime("%m/%Y"))
             
-            faturamento_mes = dados_periodo.get('faturamento', {})
-            despesas_mes = dados_periodo.get('despesas', {})
-            dp_mes = dados_periodo.get('departamento_pessoal', {})
+            dados_fiscais = periodo_obj.dados_fiscais or {}
+            dp_mes = periodo_obj.dados_dp or {}
+            faturamento_mes = dados_fiscais.get('faturamento', {})
+            despesas_mes = dados_fiscais.get('despesas', {})
 
             total_faturamento = sum(para_float(v) for k, v in faturamento_mes.items() if k not in ['lancado', 'concluido'])
             total_despesas_fiscal = sum(para_float(v) for k, v in despesas_mes.items() if k not in ['lancado', 'concluido'])
@@ -169,12 +165,12 @@ def comparativo_data():
             liquido_empregadores = para_float(dp_mes.get('LIQUIDO_EMPREGADORES'))
             total_despesas_e_custos = total_despesas_fiscal + liquido_colaboradores + liquido_empregadores
 
-            impostos_fed = sum(para_float(v) for k, v in dados_periodo.get('impostos_federal', {}).items() if k not in ['lancado', 'concluido'])
-            impostos_est = sum(para_float(v) for k, v in dados_periodo.get('impostos_estadual', {}).items() if k not in ['lancado', 'concluido'])
-            impostos_mun = sum(para_float(v) for k, v in dados_periodo.get('impostos_municipal', {}).items() if k not in ['lancado', 'concluido'])
-            retencoes = sum(para_float(v) for k, v in dados_periodo.get('retencoes_federal', {}).items() if k not in ['lancado', 'concluido', 'sem_notas', 'dispensado'])
+            impostos_fed = sum(para_float(v) for k, v in dados_fiscais.get('impostos_federal', {}).items() if k not in ['lancado', 'concluido'])
+            impostos_est = sum(para_float(v) for k, v in dados_fiscais.get('impostos_estadual', {}).items() if k not in ['lancado', 'concluido'])
+            impostos_mun = sum(para_float(v) for k, v in dados_fiscais.get('impostos_municipal', {}).items() if k not in ['lancado', 'concluido'])
+            retencoes = sum(para_float(v) for k, v in dados_fiscais.get('retencoes_federal', {}).items() if k not in ['lancado', 'concluido', 'sem_notas', 'dispensado'])
             
-            gps = para_float(dp_mes.get('VALOR_GPS'))
+            gps = para_float(dp_mes.get('VALOR_GPS') or dp_mes.get('INSS'))
             fgts_mensal = para_float(dp_mes.get('VALOR_GFD_MENSAL') or dp_mes.get('VALOR_FGTS_MENSAL'))
             fgts_rescisoria = para_float(dp_mes.get('VALOR_GFD_RESCISORIA') or dp_mes.get('VALOR_FGTS_RESCISORIA'))
             

@@ -3,32 +3,18 @@ import os
 import json
 from functools import wraps
 from flask import session, flash, redirect, url_for
-from .config import NOME_ARQUIVO_DADOS
 
-def carregar_dados():
-    """Carrega os dados do arquivo JSON."""
-    if not os.path.exists(NOME_ARQUIVO_DADOS): return {}
-    try:
-        with open(NOME_ARQUIVO_DADOS, 'r', encoding='utf-8') as f: return json.load(f)
-    except (json.JSONDecodeError, FileNotFoundError): return {}
-
-def salvar_dados(dados):
-    """Salva os dados no arquivo JSON."""
-    with open(NOME_ARQUIVO_DADOS, 'w', encoding='utf-8') as f: json.dump(dados, f, indent=4, ensure_ascii=False)
+# A importação de NOME_ARQUIVO_DADOS foi removida.
+# As funções carregar_dados e salvar_dados foram removidas.
 
 def para_float(valor):
     """Converte uma string monetária ou um número para float."""
-    # Se o valor já for um número, apenas o retorna como float.
     if isinstance(valor, (int, float)):
         return float(valor)
-    
-    # Se for uma string, processa-a.
     if not valor:
         return 0.0
     try:
-        # Garante que é uma string, remove 'R$', espaços, e o ponto de milhar
         s = str(valor).replace('R$', '').strip().replace('.', '')
-        # Substitui a vírgula decimal por um ponto decimal
         s = s.replace(',', '.')
         return float(s)
     except (ValueError, TypeError):
@@ -40,6 +26,6 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if 'logged_in' not in session:
             flash('Por favor, faça login para acessar esta página.', 'warning')
-            return redirect(url_for('main.login'))
+            return redirect(url_for('main.login')) # O nome da rota de login foi corrigido para 'main.login'
         return f(*args, **kwargs)
     return decorated_function

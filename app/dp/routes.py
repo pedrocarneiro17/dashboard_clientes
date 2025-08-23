@@ -1,6 +1,7 @@
 # app/dp/routes.py
 from flask import Blueprint, render_template, request, flash, redirect, url_for
-from app.utils import carregar_dados, salvar_dados, login_required
+from app import db, Empresa, Periodo # Importa o db e os Modelos
+from app.utils import login_required
 from app.pdf_parser import extrair_dados_pdf
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -16,15 +17,12 @@ def upload_dp_page():
 @dp_bp.route('/upload_dp', methods=['POST'])
 @login_required
 def upload_dp():
-    """Processa o upload dos PDFs, salva os dados e finaliza o status do DP."""
+    """Processa o upload dos PDFs, salva os dados no banco e finaliza o status do DP."""
     files = request.files.getlist('pdf_files')
     if not files or files[0].filename == '':
         flash('Nenhum arquivo selecionado.', 'warning')
         return redirect(url_for('dp.upload_dp_page'))
 
-    dados_gerais = carregar_dados()
-    cnpj_map = {detalhes['cnpj']: nome for nome, detalhes in dados_gerais.items() if 'cnpj' in detalhes}
-    
     sucesso_count = 0
     falha_leitura = []
     falha_cnpj = []
@@ -39,22 +37,26 @@ def upload_dp():
                     falha_leitura.append(file.filename)
                     continue
 
-                periodo = dados_extraidos.get("PERIODO")
+                periodo_str = dados_extraidos.get("PERIODO")
                 cnpj = dados_extraidos.get("CNPJ")
 
-                if not periodo:
+                if not periodo_str:
                     falha_periodo.append(file.filename)
                     continue
                 
-                if cnpj in cnpj_map:
-                    nome_empresa = cnpj_map[cnpj]
-                    if 'periodos' not in dados_gerais[nome_empresa]:
-                        dados_gerais[nome_empresa]['periodos'] = {}
-                    if periodo not in dados_gerais[nome_empresa]['periodos']:
-                        dados_gerais[nome_empresa]['periodos'][periodo] = {}
+                # Procura a empresa no banco de dados pelo CNPJ
+                empresa = Empresa.query.filter_by(cnpj=cnpj).first()
+                
+                if empresa:
+                    # Procura pelo período; se não existir, cria um novo
+                    periodo_obj = Periodo.query.filter_by(empresa_id=empresa.id, ano_mes=periodo_str).first()
+                    if not periodo_obj:
+                        periodo_obj = Periodo(empresa_id=empresa.id, ano_mes=periodo_str)
+                        db.session.add(periodo_obj)
                     
-                    dados_gerais[nome_empresa]['periodos'][periodo]['departamento_pessoal'] = dados_extraidos
-                    dados_gerais[nome_empresa]['periodos'][periodo]['dp_status'] = 'Finalizado'
+                    # Salva os dados extraídos no campo JSON e atualiza o status
+                    periodo_obj.dados_dp = dados_extraidos
+                    periodo_obj.dp_status = 'Finalizado'
                     
                     sucesso_count += 1
                 else:
@@ -64,11 +66,11 @@ def upload_dp():
                 falha_leitura.append(f"{file.filename} (erro: {e})")
 
     if sucesso_count > 0:
-        salvar_dados(dados_gerais)
+        db.session.commit() # Salva todas as alterações no banco de uma só vez
         flash(f'{sucesso_count} arquivo(s) processado(s) com sucesso!', 'success')
     
     if falha_leitura:
-        flash(f'Falha ao ler os seguintes arquivos (verifique se não estão corrompidos): {", ".join(falha_leitura)}', 'danger')
+        flash(f'Falha ao ler os seguintes arquivos: {", ".join(falha_leitura)}', 'danger')
     if falha_cnpj:
         flash(f'CNPJ não encontrado no sistema para os arquivos: {", ".join(falha_cnpj)}', 'warning')
     if falha_periodo:
@@ -79,13 +81,12 @@ def upload_dp():
 @dp_bp.route('/dados_dp/<path:nome_empresa>/<periodo>')
 @login_required
 def dados_dp(nome_empresa, periodo):
-    """Exibe os dados de DP de uma empresa para um período."""
-    dados_gerais = carregar_dados()
-    dados_empresa = dados_gerais.get(nome_empresa, {})
-    dados_periodo = dados_empresa.get('periodos', {}).get(periodo, {})
-    
-    dados_dp_especifico = dados_periodo.get('departamento_pessoal')
-    status_dp = dados_periodo.get('dp_status', 'Em Aberto')
+    """Exibe os dados de DP de uma empresa para um período, lendo do banco de dados."""
+    empresa = Empresa.query.filter_by(nome=nome_empresa).first_or_404()
+    periodo_obj = Periodo.query.filter_by(empresa_id=empresa.id, ano_mes=periodo).first()
+
+    dados_dp_especifico = periodo_obj.dados_dp if periodo_obj and periodo_obj.dados_dp else None
+    status_dp = periodo_obj.dp_status if periodo_obj else 'Em Aberto'
     
     aniversariantes = []
     if dados_dp_especifico and 'COLABORADORES' in dados_dp_especifico:
@@ -114,17 +115,14 @@ def dados_dp(nome_empresa, periodo):
 @dp_bp.route('/delete_dp_data/<path:nome_empresa>/<periodo>', methods=['POST'])
 @login_required
 def delete_dp_data(nome_empresa, periodo):
-    """Exclui os dados de DP de um mês e reabre o status."""
-    dados_gerais = carregar_dados()
-    
-    periodos = dados_gerais.get(nome_empresa, {}).get('periodos', {})
-    if periodo in periodos:
-        if 'departamento_pessoal' in periodos[periodo]:
-            del periodos[periodo]['departamento_pessoal']
-        
-        periodos[periodo]['dp_status'] = 'Em Aberto'
-        
-        salvar_dados(dados_gerais)
+    """Exclui os dados de DP de um mês no banco de dados e reabre o status."""
+    empresa = Empresa.query.filter_by(nome=nome_empresa).first_or_404()
+    periodo_obj = Periodo.query.filter_by(empresa_id=empresa.id, ano_mes=periodo).first()
+
+    if periodo_obj:
+        periodo_obj.dados_dp = None # Apaga os dados do campo JSON
+        periodo_obj.dp_status = 'Em Aberto' # Reseta o status
+        db.session.commit()
         flash('Dados do Departamento Pessoal para este mês foram excluídos com sucesso.', 'success')
     else:
         flash('Período não encontrado para exclusão.', 'warning')

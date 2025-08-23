@@ -1,18 +1,16 @@
 # app/config.py
+import os
 
-# Chave secreta para a segurança da sessão
-SECRET_KEY = 'uma-chave-secreta-muito-dificil-de-adivinhar'
+# Chave secreta para a segurança da sessão (lida de variável de ambiente)
+SECRET_KEY = os.getenv('SECRET_KEY', 'uma-chave-secreta-padrão-para-desenvolvimento')
 
-# Constantes da aplicação
-NOME_ARQUIVO_DADOS = 'dados_empresas.json'
-USUARIO_PADRAO = 'admin'
-SENHA_PADRAO = 'contajur2025'
+# As constantes de login e nome do arquivo JSON foram REMOVIDAS.
 
-# Listas de Campos para os formulários
+# Listas de Campos para os formulários (isto pode continuar aqui)
 CAMPOS_FATURAMENTO = [
     "Serviços tributados", "Serviços retidos", "Venda (indústria/imóveis)",
     "Revenda mercadorias tributadas", "Revenda mercadorias não tributárias",
-    "Revenda de mercadoria monofásica", "Locação", "Outras receitas"  # NOME ALTERADO AQUI
+    "Revenda de mercadoria monofásica", "Locação", "Outras receitas"
 ]
 CAMPOS_DESPESAS = [
     "Compras para revenda", "Compras para uso/consumo",

@@ -21,8 +21,8 @@
                         <label for="empresa_select" class="form-label">Empresa</label>
                         <select id="empresa_select" class="form-select" required>
                             <option value="" disabled selected>-- Selecione uma empresa --</option>
-                            {% for nome in empresas.keys() %}
-                                <option value="{{ nome }}">{{ nome }}</option>
+                            {% for empresa in empresas %}
+                                <option value="{{ empresa.nome }}">{{ empresa.nome }}</option>
                             {% endfor %}
                         </select>
                     </div>
